@@ -1,11 +1,14 @@
 import { useState, useRef } from 'react';
-import { Download, RotateCcw, Share2, Camera, Home } from 'lucide-react';
+import { Download, RotateCcw, Share2, Camera, Home, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+// @ts-ignore
+import gifshot from 'gifshot';
 
 interface CapturedPhoto {
   id: string;
   dataUrl: string;
   timestamp: number;
+  gifData?: Blob;
 }
 
 interface Layout {
@@ -24,7 +27,11 @@ interface FinalResultProps {
 const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) => {
   const [selectedDesign, setSelectedDesign] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isGeneratingGif, setIsGeneratingGif] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Check if any photos have GIF data
+  const hasGifData = photos.some(photo => photo.gifData);
 
   // Mock design templates - in a real app, these would be actual design files
   const designTemplates = Array.from({ length: 5 }, (_, i) => ({
@@ -97,6 +104,61 @@ const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) 
     ctx.font = '14px Montserrat';
     ctx.textAlign = 'center';
     ctx.fillText('Elegancia Nocturna', stripWidth / 2, stripHeight - 20);
+  };
+
+  const downloadGifStrip = async () => {
+    if (!hasGifData) return;
+    
+    setIsGeneratingGif(true);
+    try {
+      // Convert video blobs to data URLs for gifshot
+      const gifDataUrls: string[] = [];
+      
+      for (const photo of photos) {
+        if (photo.gifData) {
+          const url = URL.createObjectURL(photo.gifData);
+          gifDataUrls.push(url);
+        }
+      }
+      
+      if (gifDataUrls.length === 0) {
+        console.error('No GIF data found');
+        return;
+      }
+      
+      // Create GIF using gifshot
+      gifshot.createGIF({
+        videos: gifDataUrls,
+        gifWidth: 400,
+        gifHeight: layout.shots === 1 ? 600 : layout.shots * 150 + 100,
+        interval: 0.2,
+        numFrames: 10,
+        frameDuration: 0.5,
+        fontWeight: 'bold',
+        fontSize: '24px',
+        fontFamily: 'Cinzel',
+        fontColor: '#D8AE48',
+        textAlign: 'center',
+        textBaseline: 'middle'
+      }, (obj: any) => {
+        if (!obj.error) {
+          const link = document.createElement('a');
+          link.download = `boothiecall-gif-${layout.id}-${Date.now()}.gif`;
+          link.href = obj.image;
+          link.click();
+        } else {
+          console.error('Error creating GIF:', obj.error);
+        }
+        
+        // Clean up URLs
+        gifDataUrls.forEach(url => URL.revokeObjectURL(url));
+        setIsGeneratingGif(false);
+      });
+      
+    } catch (error) {
+      console.error('Error generating GIF strip:', error);
+      setIsGeneratingGif(false);
+    }
   };
 
   const downloadPhotoStrip = async () => {
@@ -211,6 +273,18 @@ const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) 
                 {isDownloading ? 'Generating...' : 'Download Photo Strip (PNG)'}
               </Button>
               
+              {hasGifData && (
+                <Button
+                  onClick={downloadGifStrip}
+                  disabled={isGeneratingGif}
+                  variant="outline"
+                  className="w-full border-primary/50 text-primary hover:bg-primary/10"
+                >
+                  <Video className="w-5 h-5 mr-2" />
+                  {isGeneratingGif ? 'Creating GIF...' : 'Download Animated GIF'}
+                </Button>
+              )}
+              
               <Button
                 variant="outline"
                 className="w-full border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
@@ -230,9 +304,17 @@ const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) 
                 <p className="text-xs text-muted-foreground">{layout.name}</p>
               </div>
               <div>
-                <Download className="w-6 h-6 mx-auto mb-2 text-primary" />
-                <p className="text-sm font-montserrat font-medium">High Quality</p>
-                <p className="text-xs text-muted-foreground">PNG Format</p>
+                {hasGifData ? (
+                  <Video className="w-6 h-6 mx-auto mb-2 text-primary" />
+                ) : (
+                  <Download className="w-6 h-6 mx-auto mb-2 text-primary" />
+                )}
+                <p className="text-sm font-montserrat font-medium">
+                  {hasGifData ? 'PNG + GIF' : 'High Quality'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {hasGifData ? 'Dual Format' : 'PNG Format'}
+                </p>
               </div>
             </div>
           </div>

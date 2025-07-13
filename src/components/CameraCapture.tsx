@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, RotateCcw, Download } from 'lucide-react';
+import { Camera, RotateCcw, Download, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CapturedPhoto {
   id: string;
   dataUrl: string;
   timestamp: number;
+  gifData?: Blob;
 }
 
 interface Layout {
@@ -25,11 +26,14 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
   const [currentShot, setCurrentShot] = useState(1);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isRecordingGif, setIsRecordingGif] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   // Initialize camera
   useEffect(() => {
@@ -95,7 +99,90 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
     }
   }, [photos, currentShot, layout.shots, onComplete]);
 
-  const startCountdown = useCallback(() => {
+  // GIF recording functionality
+  const startGifRecording = useCallback(() => {
+    if (!stream || !videoRef.current) return;
+    
+    try {
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp8'
+      });
+      
+      recordedChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        // Store the GIF data with the current photo
+        if (photos.length > 0) {
+          const lastPhotoIndex = photos.length - 1;
+          const updatedPhotos = [...photos];
+          updatedPhotos[lastPhotoIndex] = {
+            ...updatedPhotos[lastPhotoIndex],
+            gifData: blob
+          };
+          setPhotos(updatedPhotos);
+        }
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecordingGif(true);
+      
+      // Record for 2 seconds
+      setTimeout(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop();
+          setIsRecordingGif(false);
+        }
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error starting GIF recording:', error);
+    }
+  }, [stream, photos]);
+
+  const capturePhotoWithGif = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    // Start GIF recording first
+    startGifRecording();
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (!context) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    context.drawImage(video, 0, 0);
+    
+    const dataUrl = canvas.toDataURL('image/png', 0.9);
+    const newPhoto: CapturedPhoto = {
+      id: `photo-${Date.now()}`,
+      dataUrl,
+      timestamp: Date.now()
+    };
+
+    const updatedPhotos = [...photos, newPhoto];
+    setPhotos(updatedPhotos);
+
+    if (updatedPhotos.length >= layout.shots) {
+      // All photos captured, wait a bit for GIF recording to complete
+      setTimeout(() => onComplete(updatedPhotos), 2500);
+    } else {
+      setCurrentShot(currentShot + 1);
+    }
+  }, [photos, currentShot, layout.shots, onComplete, startGifRecording]);
+
+  const startCountdown = useCallback((withGif = false) => {
     if (isCapturing) return;
     
     setIsCapturing(true);
@@ -106,7 +193,11 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
         if (prev === null || prev <= 1) {
           clearInterval(countdownInterval);
           setTimeout(() => {
-            capturePhoto();
+            if (withGif) {
+              capturePhotoWithGif();
+            } else {
+              capturePhoto();
+            }
             setCountdown(null);
             setIsCapturing(false);
           }, 100);
@@ -115,7 +206,7 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
         return prev - 1;
       });
     }, 1000);
-  }, [isCapturing, capturePhoto]);
+  }, [isCapturing, capturePhoto, capturePhotoWithGif]);
 
   const retakePhotos = () => {
     setPhotos([]);
@@ -178,14 +269,24 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
             </div>
 
             {/* Camera Controls */}
-            <div className="flex justify-center gap-4 mt-6">
+            <div className="flex justify-center gap-3 mt-6">
               <Button
-                onClick={startCountdown}
+                onClick={() => startCountdown(false)}
                 disabled={isCapturing || photos.length >= layout.shots}
                 className="btn-elegancia"
               >
                 <Camera className="w-5 h-5 mr-2" />
                 {isCapturing ? 'Capturing...' : 'Take Photo'}
+              </Button>
+              
+              <Button
+                onClick={() => startCountdown(true)}
+                disabled={isCapturing || photos.length >= layout.shots}
+                variant="outline"
+                className="border-primary/50 text-primary hover:bg-primary/10"
+              >
+                <Video className="w-5 h-5 mr-2" />
+                {isRecordingGif ? 'Recording...' : 'Photo + GIF'}
               </Button>
               
               {photos.length > 0 && (
