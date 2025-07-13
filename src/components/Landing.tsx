@@ -1,20 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Camera, Sparkles, Image, Zap, Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import heroGallery from '@/assets/hero-gallery.jpg';
+import { useState, useEffect } from "react";
+import { Camera, Sparkles, Image, Zap, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import heroGallery from "@/assets/hero-gallery.jpg";
 
 interface LandingProps {
   onStart: () => void;
 }
 
 const Landing = ({ onStart }: LandingProps) => {
-  const [shootingStars, setShootingStars] = useState<Array<{ id: number; delay: number }>>([]);
+  const [shootingStars, setShootingStars] = useState<
+    Array<{ id: number; delay: number }>
+  >([]);
 
   useEffect(() => {
     // Create shooting stars with random delays
     const stars = Array.from({ length: 5 }, (_, i) => ({
       id: i,
-      delay: Math.random() * 5000 + 1000
+      delay: Math.random() * 5000 + 1000,
     }));
     setShootingStars(stars);
   }, []);
@@ -22,40 +24,40 @@ const Landing = ({ onStart }: LandingProps) => {
   const features = [
     {
       icon: Camera,
-      title: 'Professional Capture',
-      description: 'High-quality photos with countdown timer'
+      title: "Professional Capture",
+      description: "High-quality photos with countdown timer",
     },
     {
       icon: Sparkles,
-      title: 'Luxury Filters',
-      description: '15+ premium filter effects'
+      title: "Luxury Filters",
+      description: "15+ premium filter effects",
     },
     {
       icon: Image,
-      title: 'Custom Layouts',
-      description: 'Multiple photo strip designs'
+      title: "Custom Layouts",
+      description: "Multiple photo strip designs",
     },
     {
       icon: Zap,
-      title: 'GIF Creation',
-      description: 'Animated strips with motion'
+      title: "GIF Creation",
+      description: "Animated strips with motion",
     },
     {
       icon: Download,
-      title: 'Instant Download',
-      description: 'PNG & GIF export options'
-    }
+      title: "Instant Download",
+      description: "PNG & GIF export options",
+    },
   ];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Gallery Background with Hero Image */}
       <div className="gallery-background" />
-      <div 
+      <div
         className="absolute inset-0 opacity-5 bg-center bg-cover"
         style={{ backgroundImage: `url(${heroGallery})` }}
       />
-      
+
       {/* Shooting Stars */}
       {shootingStars.map((star) => (
         <div
@@ -93,12 +95,25 @@ const Landing = ({ onStart }: LandingProps) => {
           </div>
         </div>
 
+        {/* CTA Button */}
+        <div className="animate-slide-up animate-stagger-5 px-4">
+          <Button
+            onClick={onStart}
+            className="btn-elegancia text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 animate-pulse-glow"
+          >
+            <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
+            Start Playground
+          </Button>
+        </div>
+
         {/* Features Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-12 w-full max-w-6xl px-4">
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`card-elegancia p-4 sm:p-6 text-center animate-scale-in animate-stagger-${index + 1}`}
+              className={`card-elegancia p-4 sm:p-6 text-center animate-scale-in animate-stagger-${
+                index + 1
+              }`}
             >
               <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 bg-gradient-primary rounded-full flex items-center justify-center">
                 <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
@@ -111,17 +126,6 @@ const Landing = ({ onStart }: LandingProps) => {
               </p>
             </div>
           ))}
-        </div>
-
-        {/* CTA Button */}
-        <div className="animate-slide-up animate-stagger-5 px-4">
-          <Button
-            onClick={onStart}
-            className="btn-elegancia text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 animate-pulse-glow"
-          >
-            <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
-            Start Playground
-          </Button>
         </div>
 
         {/* Decorative Elements */}
