@@ -1,10 +1,10 @@
 import React from 'react';
+import PageHeader from '../components/PageHeader';
 
 const Assets: React.FC = () => {
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-4">Assets</h2>
-      <p>Asset management will be available here.</p>
+      <PageHeader title="Assets" description="Asset management will be available here." />
     </div>
   );
 };

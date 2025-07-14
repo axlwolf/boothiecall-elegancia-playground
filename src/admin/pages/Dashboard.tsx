@@ -1,10 +1,10 @@
 import React from 'react';
+import PageHeader from '../components/PageHeader';
 
 const Dashboard: React.FC = () => {
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-4">Dashboard</h2>
-      <p>Welcome to the admin dashboard. Analytics and summaries will be displayed here.</p>
+      <PageHeader title="Dashboard" description="Welcome to the admin dashboard. Analytics and summaries will be displayed here." />
     </div>
   );
 };

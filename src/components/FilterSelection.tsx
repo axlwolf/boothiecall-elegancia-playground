@@ -1,23 +1,12 @@
 import { useState } from 'react';
 import { Check, ArrowRight, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Layout, CapturedPhoto } from '@/types/layout';
 
 interface Filter {
   id: string;
   name: string;
   cssFilter: string;
-}
-
-interface CapturedPhoto {
-  id: string;
-  dataUrl: string;
-  timestamp: number;
-}
-
-interface Layout {
-  id: string;
-  name: string;
-  shots: number;
 }
 
 interface FilterSelectionProps {

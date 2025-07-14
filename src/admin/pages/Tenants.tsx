@@ -1,10 +1,10 @@
 import React from 'react';
+import PageHeader from '../components/PageHeader';
 
 const Tenants: React.FC = () => {
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-4">Tenants</h2>
-      <p>Tenant management will be available here.</p>
+      <PageHeader title="Tenants" description="Tenant management will be available here." />
     </div>
   );
 };
