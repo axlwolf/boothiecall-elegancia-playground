@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
@@ -8,61 +8,88 @@ import { Asset } from '../types/Asset';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UploadAssetDialog } from '../components/UploadAssetDialog';
-
-export const columns: ColumnDef<Asset>[] = [
-  {
-    accessorKey: 'fileName',
-    header: 'File Name',
-  },
-  {
-    accessorKey: 'type',
-    header: 'Type',
-  },
-  {
-    accessorKey: 'createdAt',
-    header: 'Created At',
-    cell: ({ row }) => {
-      const date = new Date(row.getValue('createdAt'));
-      return date.toLocaleDateString();
-    },
-  },
-  {
-    id: 'preview',
-    header: 'Preview',
-    cell: ({ row }) => {
-      const asset = row.original;
-      return <img src={asset.url} alt={asset.fileName} className="h-10 w-10 object-cover rounded-md" />;
-    },
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const asset = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
-            <DropdownMenuItem onClick={() => console.log('Edit', asset.id)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => console.log('Delete', asset.id)} className="text-red-500">Delete</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
+import { EditAssetDialog } from '../components/EditAssetDialog';
+import { DeleteAssetDialog } from '../components/DeleteAssetDialog';
 
 const Assets: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
-  useEffect(() => {
+  const fetchAssets = useCallback(() => {
     assetService.getAssets().then(setAssets);
   }, []);
+
+  useEffect(() => {
+    fetchAssets();
+  }, [fetchAssets]);
+
+  const handleUpload = (file: File, type: Asset['type']) => {
+    assetService.addAsset(file, type).then(() => fetchAssets());
+  };
+
+  const handleUpdate = (id: string, data: Partial<Pick<Asset, 'fileName' | 'type'>>) => {
+    assetService.updateAsset(id, data).then(() => fetchAssets());
+  };
+
+  const handleDelete = (id: string) => {
+    assetService.deleteAsset(id).then(() => fetchAssets());
+  };
+
+  const columns: ColumnDef<Asset>[] = [
+    {
+      accessorKey: 'fileName',
+      header: 'File Name',
+    },
+    {
+      accessorKey: 'type',
+      header: 'Type',
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Created At',
+      cell: ({ row }) => {
+        const date = new Date(row.getValue('createdAt'));
+        return date.toLocaleDateString();
+      },
+    },
+    {
+      id: 'preview',
+      header: 'Preview',
+      cell: ({ row }) => {
+        const asset = row.original;
+        return <img src={asset.url} alt={asset.fileName} className="h-10 w-10 object-cover rounded-md" />;
+      },
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const asset = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 text-white">
+              <DropdownMenuItem onClick={() => {
+                setSelectedAsset(asset);
+                setEditDialogOpen(true);
+              }}>Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                setSelectedAsset(asset);
+                setDeleteDialogOpen(true);
+              }} className="text-red-500">Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   return (
     <div>
@@ -76,7 +103,9 @@ const Assets: React.FC = () => {
         }
       />
       <DataTable columns={columns} data={assets} />
-      <UploadAssetDialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen} />
+      <UploadAssetDialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen} onUpload={handleUpload} />
+      <EditAssetDialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen} asset={selectedAsset} onUpdate={handleUpdate} />
+      <DeleteAssetDialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen} asset={selectedAsset} onDelete={handleDelete} />
     </div>
   );
 };
