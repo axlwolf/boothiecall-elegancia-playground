@@ -1,19 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, RotateCcw, Download, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface CapturedPhoto {
-  id: string;
-  dataUrl: string;
-  timestamp: number;
-  gifData?: Blob;
-}
-
-interface Layout {
-  id: string;
-  name: string;
-  shots: number;
-}
+import { Layout, CapturedPhoto } from '@/types/layout';
 
 interface CameraCaptureProps {
   layout: Layout;

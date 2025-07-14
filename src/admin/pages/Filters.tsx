@@ -1,10 +1,10 @@
 import React from 'react';
+import PageHeader from '../components/PageHeader';
 
 const Filters: React.FC = () => {
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-4">Filters</h2>
-      <p>Filter management will be available here.</p>
+      <PageHeader title="Filters" description="Filter management will be available here." />
     </div>
   );
 };

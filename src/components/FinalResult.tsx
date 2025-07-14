@@ -3,29 +3,18 @@ import { Download, RotateCcw, Share2, Camera, Home, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 // @ts-ignore
 import gifshot from 'gifshot';
-
-interface CapturedPhoto {
-  id: string;
-  dataUrl: string;
-  timestamp: number;
-  gifData?: Blob;
-}
-
-interface Layout {
-  id: string;
-  name: string;
-  shots: number;
-}
+import { Layout, CapturedPhoto } from '@/types/layout';
+import { Template } from '@/types/templates';
 
 interface FinalResultProps {
   layout: Layout;
+  template: Template;
   photos: CapturedPhoto[];
   onStartOver: () => void;
   onBack: () => void;
 }
 
-const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) => {
-  const [selectedDesign, setSelectedDesign] = useState(1);
+const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalResultProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGeneratingGif, setIsGeneratingGif] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,63 +22,104 @@ const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) 
   // Check if any photos have GIF data
   const hasGifData = photos.some(photo => photo.gifData);
 
-  // Mock design templates - in a real app, these would be actual design files
-  const designTemplates = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1,
-    name: `Design ${i + 1}`,
-    preview: `Template ${i + 1}`
-  }));
+  // Calculate canvas dimensions based on template and layout
+  const getCanvasDimensions = () => {
+    const baseWidth = 400;
+    let baseHeight = 600;
+    
+    switch (layout.shots) {
+      case 1:
+        baseHeight = 600;
+        break;
+      case 3:
+        baseHeight = 650;
+        break;
+      case 4:
+        baseHeight = 700;
+        break;
+      case 6:
+        baseHeight = 500;
+        break;
+      default:
+        baseHeight = layout.shots * 150 + 100;
+    }
+    
+    return { width: baseWidth, height: baseHeight };
+  };
 
   const generatePhotoStrip = async () => {
     if (!canvasRef.current) return;
+    
+    // Fallback template if none provided
+    if (!template) {
+      console.error('No template provided for photo strip generation');
+      return;
+    }
+    
+    try {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas dimensions based on layout
-    const stripWidth = 400;
-    const stripHeight = layout.shots === 1 ? 600 : layout.shots * 150 + 100;
-    
+    // Set canvas dimensions
+    const { width: stripWidth, height: stripHeight } = getCanvasDimensions();
     canvas.width = stripWidth;
     canvas.height = stripHeight;
 
-    // Background
-    ctx.fillStyle = '#1a1a2e';
+    // Background using template styling
+    ctx.fillStyle = template.styling.backgroundColor;
     ctx.fillRect(0, 0, stripWidth, stripHeight);
 
-    // Gold border
-    ctx.strokeStyle = '#D8AE48';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, stripWidth - 4, stripHeight - 4);
+    // Border using template styling
+    ctx.strokeStyle = template.styling.borderColor;
+    ctx.lineWidth = template.styling.borderWidth;
+    ctx.strokeRect(
+      template.styling.borderWidth / 2,
+      template.styling.borderWidth / 2,
+      stripWidth - template.styling.borderWidth,
+      stripHeight - template.styling.borderWidth
+    );
 
-    // Title
-    ctx.fillStyle = '#D8AE48';
-    ctx.font = 'bold 24px Cinzel';
+    // Title using template styling
+    ctx.fillStyle = template.styling.titleColor;
+    ctx.font = template.styling.titleFont;
     ctx.textAlign = 'center';
     ctx.fillText('BoothieCall', stripWidth / 2, 40);
 
-    // Load and draw photos
+    // Load and draw photos using template frame mapping
     const photoPromises = photos.map((photo, index) => {
       return new Promise<void>((resolve) => {
+        if (index >= template.frameMapping.length) {
+          resolve();
+          return;
+        }
+        
+        const frame = template.frameMapping[index];
         const img = new Image();
         img.onload = () => {
-          const photoSize = layout.shots === 1 ? 350 : 120;
-          const photoX = (stripWidth - photoSize) / 2;
-          const photoY = layout.shots === 1 ? 100 : 80 + index * 130;
-
-          // Draw photo with rounded corners
+          // Draw photo with template-defined dimensions and position
           ctx.save();
           ctx.beginPath();
-          ctx.roundRect(photoX, photoY, photoSize, photoSize, 8);
+          if (frame.borderRadius) {
+            ctx.roundRect(frame.x, frame.y, frame.width, frame.height, frame.borderRadius);
+          } else {
+            ctx.rect(frame.x, frame.y, frame.width, frame.height);
+          }
           ctx.clip();
-          ctx.drawImage(img, photoX, photoY, photoSize, photoSize);
+          ctx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
           ctx.restore();
 
-          // Photo border
-          ctx.strokeStyle = '#D8AE48';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(photoX, photoY, photoSize, photoSize);
+          // Photo border using template styling
+          ctx.strokeStyle = template.styling.borderColor;
+          ctx.lineWidth = Math.max(1, template.styling.borderWidth / 2);
+          if (frame.borderRadius) {
+            ctx.beginPath();
+            ctx.roundRect(frame.x, frame.y, frame.width, frame.height, frame.borderRadius);
+            ctx.stroke();
+          } else {
+            ctx.strokeRect(frame.x, frame.y, frame.width, frame.height);
+          }
 
           resolve();
         };
@@ -99,11 +129,26 @@ const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) 
 
     await Promise.all(photoPromises);
 
-    // Footer
-    ctx.fillStyle = '#D8AE48';
-    ctx.font = '14px Montserrat';
+    // Footer using template styling
+    ctx.fillStyle = template.styling.subtitleColor;
+    ctx.font = template.styling.subtitleFont;
     ctx.textAlign = 'center';
     ctx.fillText('Elegancia Nocturna', stripWidth / 2, stripHeight - 20);
+    
+    } catch (error) {
+      console.error('Error generating photo strip:', error);
+      // Fallback to simple generation if template fails
+      const { width: stripWidth, height: stripHeight } = getCanvasDimensions();
+      const canvas = canvasRef.current!;
+      const ctx = canvas.getContext('2d')!;
+      
+      // Simple fallback styling
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, stripWidth, stripHeight);
+      ctx.strokeStyle = '#D8AE48';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, stripWidth - 4, stripHeight - 4);
+    }
   };
 
   const downloadGifStrip = async () => {
@@ -187,7 +232,7 @@ const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) 
           Your Photo Strip
         </h1>
         <p className="text-lg text-muted-foreground font-montserrat">
-          Choose a design and download your masterpiece
+          Your {template.name} design is ready for download
         </p>
       </div>
 
@@ -229,32 +274,35 @@ const FinalResult = ({ layout, photos, onStartOver, onBack }: FinalResultProps) 
           </div>
         </div>
 
-        {/* Design Selection & Actions */}
+        {/* Selected Template Info & Actions */}
         <div className="space-y-6">
           <h3 className="font-cinzel font-semibold text-xl text-center">
-            Design Templates
+            Selected Design
           </h3>
           
-          {/* Design Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-            {designTemplates.map(design => (
-              <div
-                key={design.id}
-                className={`card-elegancia p-4 cursor-pointer transition-all duration-300 ${
-                  selectedDesign === design.id ? 'border-primary shadow-glow scale-105' : ''
-                }`}
-                onClick={() => setSelectedDesign(design.id)}
-              >
-                <div className="aspect-[3/4] bg-gradient-card rounded-lg flex items-center justify-center mb-2">
-                  <span className="text-muted-foreground text-sm font-montserrat">
-                    {design.preview}
-                  </span>
-                </div>
-                <p className="text-center text-sm font-montserrat font-medium">
-                  {design.name}
-                </p>
+          {/* Template Info */}
+          <div className="card-elegancia p-6">
+            <h4 className="font-cinzel font-bold text-lg text-primary mb-2">
+              {template.name}
+            </h4>
+            <p className="text-sm text-muted-foreground font-montserrat mb-4">
+              {template.description}
+            </p>
+            
+            <div className="space-y-2 text-xs font-montserrat">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Layout:</span>
+                <span className="text-foreground">{layout.name}</span>
               </div>
-            ))}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Photos:</span>
+                <span className="text-foreground">{layout.shots}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Template ID:</span>
+                <span className="text-foreground">{template.id}</span>
+              </div>
+            </div>
           </div>
 
           {/* Download Options */}
