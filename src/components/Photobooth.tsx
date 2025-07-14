@@ -1,27 +1,19 @@
 import { useState } from 'react';
 import Landing from './Landing';
 import LayoutSelection from './LayoutSelection';
+import DesignSelection from './DesignSelection';
 import CameraCapture from './CameraCapture';
 import FilterSelection from './FilterSelection';
 import FinalResult from './FinalResult';
+import { Layout, CapturedPhoto } from '@/types/layout';
+import { Template } from '@/types/templates';
 
-type Step = 'landing' | 'layout' | 'capture' | 'filters' | 'result';
-
-interface Layout {
-  id: string;
-  name: string;
-  shots: number;
-}
-
-interface CapturedPhoto {
-  id: string;
-  dataUrl: string;
-  timestamp: number;
-}
+type Step = 'landing' | 'layout' | 'design' | 'capture' | 'filters' | 'result';
 
 const Photobooth = () => {
   const [step, setStep] = useState<Step>('landing');
   const [selectedLayout, setSelectedLayout] = useState<Layout | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([]);
 
   const handleStart = () => {
@@ -30,6 +22,11 @@ const Photobooth = () => {
 
   const handleLayoutSelect = (layout: Layout) => {
     setSelectedLayout(layout);
+    setStep('design');
+  };
+
+  const handleDesignSelect = (template: Template) => {
+    setSelectedTemplate(template);
     setStep('capture');
   };
 
@@ -45,11 +42,18 @@ const Photobooth = () => {
   const handleBackToLanding = () => {
     setStep('landing');
     setSelectedLayout(null);
+    setSelectedTemplate(null);
     setCapturedPhotos([]);
   };
 
   const handleBackToLayout = () => {
     setStep('layout');
+    setSelectedTemplate(null);
+    setCapturedPhotos([]);
+  };
+
+  const handleBackToDesign = () => {
+    setStep('design');
     setCapturedPhotos([]);
   };
 
@@ -69,12 +73,21 @@ const Photobooth = () => {
         />
       );
     
+    case 'design':
+      return selectedLayout ? (
+        <DesignSelection
+          layout={selectedLayout}
+          onSelectDesign={handleDesignSelect}
+          onBack={handleBackToLayout}
+        />
+      ) : null;
+    
     case 'capture':
       return selectedLayout ? (
         <CameraCapture
           layout={selectedLayout}
           onComplete={handlePhotosComplete}
-          onBack={handleBackToLayout}
+          onBack={handleBackToDesign}
         />
       ) : null;
     
@@ -89,9 +102,10 @@ const Photobooth = () => {
       ) : null;
     
     case 'result':
-      return selectedLayout && capturedPhotos.length > 0 ? (
+      return selectedLayout && selectedTemplate && capturedPhotos.length > 0 ? (
         <FinalResult
           layout={selectedLayout}
+          template={selectedTemplate}
           photos={capturedPhotos}
           onStartOver={handleBackToLanding}
           onBack={() => setStep('filters')}
