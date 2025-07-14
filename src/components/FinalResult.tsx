@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { Download, RotateCcw, Share2, Camera, Home, Video } from 'lucide-react';
+import { Download, RotateCcw, Share2, Camera, Home, Video, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 // @ts-ignore
 import gifshot from 'gifshot';
 import { Layout, CapturedPhoto } from '@/types/layout';
 import { Template } from '@/types/templates';
 import ShareModal from './ShareModal';
+import PrintPreview from './PrintPreview';
 
 interface FinalResultProps {
   layout: Layout;
@@ -22,6 +23,7 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack, onSessionC
   const [finalImageUrl, setFinalImageUrl] = useState<string>('');
   const [generatedGifUrl, setGeneratedGifUrl] = useState<string>('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Check if any photos have GIF data
@@ -354,14 +356,25 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack, onSessionC
                 </Button>
               )}
               
-              <Button
-                onClick={() => setIsShareModalOpen(true)}
-                variant="outline"
-                className="w-full border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
-              >
-                <Share2 className="w-5 h-5 mr-2" />
-                Share Photo Strip
-              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => setIsShareModalOpen(true)}
+                  variant="outline"
+                  className="border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+                
+                <Button
+                  onClick={() => setIsPrintModalOpen(true)}
+                  variant="outline"
+                  className="border-purple-400/30 text-purple-300 hover:bg-purple-400/10"
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -431,6 +444,14 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack, onSessionC
         imageDataUrl={finalImageUrl || (canvasRef.current?.toDataURL('image/png', 0.9) || '')}
         title={`${template.name} Photo Strip`}
         description={`Check out my ${layout.name} photo strip created with BoothieCall!`}
+      />
+      
+      {/* Print Preview Modal */}
+      <PrintPreview
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        imageUrl={finalImageUrl || (canvasRef.current?.toDataURL('image/png', 0.9) || '')}
+        title={`${template.name} Photo Strip`}
       />
     </div>
   );
