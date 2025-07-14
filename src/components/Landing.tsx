@@ -83,12 +83,12 @@ const Landing = ({ onStart }: LandingProps) => {
               Playground
             </h2>
             <p className="text-base sm:text-lg md:text-xl font-montserrat text-muted-foreground max-w-2xl mx-auto px-4">
-              Elegancia Nocturna - Where luxury meets photography
+              Where luxury meets photography
             </p>
           </div>
 
           {/* Hero Image Placeholder */}
-          <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-8 photo-frame animate-float">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto photo-frame animate-float">
             <div className="w-full h-full bg-gradient-card rounded-lg flex items-center justify-center">
               <Camera className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
             </div>
@@ -96,7 +96,7 @@ const Landing = ({ onStart }: LandingProps) => {
         </div>
 
         {/* CTA Button */}
-        <div className="animate-slide-up animate-stagger-5 px-4">
+        <div className="animate-slide-up animate-stagger-5 px-4 mb-16">
           <Button
             onClick={onStart}
             className="btn-elegancia text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 animate-pulse-glow"

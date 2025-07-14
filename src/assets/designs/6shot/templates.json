@@ -1,0 +1,128 @@
+[
+  {
+    "id": "6shot-grid",
+    "name": "Classic Grid",
+    "layoutType": "6shot",
+    "description": "Traditional 2x3 photo grid",
+    "frameMapping": [
+      {
+        "x": 60,
+        "y": 80,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      },
+      {
+        "x": 220,
+        "y": 80,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      },
+      {
+        "x": 60,
+        "y": 220,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      },
+      {
+        "x": 220,
+        "y": 220,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      },
+      {
+        "x": 60,
+        "y": 360,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      },
+      {
+        "x": 220,
+        "y": 360,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      }
+    ],
+    "styling": {
+      "backgroundColor": "#1a1a2e",
+      "borderColor": "#D8AE48",
+      "borderWidth": 4,
+      "titleColor": "#D8AE48",
+      "subtitleColor": "#D8AE48",
+      "titleFont": "bold 18px Cinzel",
+      "subtitleFont": "10px Montserrat"
+    },
+    "assets": {
+      "previewImage": "/placeholder.svg"
+    },
+    "isActive": true
+  },
+  {
+    "id": "6shot-gallery",
+    "name": "Gallery Wall",
+    "layoutType": "6shot",
+    "description": "Modern gallery-style layout",
+    "frameMapping": [
+      {
+        "x": 50,
+        "y": 90,
+        "width": 110,
+        "height": 90,
+        "borderRadius": 6
+      },
+      {
+        "x": 190,
+        "y": 90,
+        "width": 110,
+        "height": 90,
+        "borderRadius": 6
+      },
+      {
+        "x": 330,
+        "y": 90,
+        "width": 110,
+        "height": 90,
+        "borderRadius": 6
+      },
+      {
+        "x": 50,
+        "y": 200,
+        "width": 110,
+        "height": 90,
+        "borderRadius": 6
+      },
+      {
+        "x": 190,
+        "y": 200,
+        "width": 110,
+        "height": 90,
+        "borderRadius": 6
+      },
+      {
+        "x": 330,
+        "y": 200,
+        "width": 110,
+        "height": 90,
+        "borderRadius": 6
+      }
+    ],
+    "styling": {
+      "backgroundColor": "#2a2a3e",
+      "borderColor": "#8b6914",
+      "borderWidth": 3,
+      "titleColor": "#d4af37",
+      "subtitleColor": "#b8860b",
+      "titleFont": "bold 16px Cinzel",
+      "subtitleFont": "9px Montserrat"
+    },
+    "assets": {
+      "previewImage": "/placeholder.svg"
+    },
+    "isActive": true
+  }
+]

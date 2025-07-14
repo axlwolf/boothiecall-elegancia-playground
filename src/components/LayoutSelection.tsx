@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface Layout {
-  id: string;
-  name: string;
-  shots: number;
-  description: string;
-  preview: string;
-}
+import { Layout } from '@/types/layout';
 
 interface LayoutSelectionProps {
   onSelectLayout: (layout: Layout) => void;

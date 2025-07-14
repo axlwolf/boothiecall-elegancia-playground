@@ -1,0 +1,100 @@
+[
+  {
+    "id": "4shot-classic",
+    "name": "Classic Quad",
+    "layoutType": "4shot",
+    "description": "Traditional 4-photo vertical strip",
+    "frameMapping": [
+      {
+        "x": 140,
+        "y": 80,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      },
+      {
+        "x": 140,
+        "y": 210,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      },
+      {
+        "x": 140,
+        "y": 340,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      },
+      {
+        "x": 140,
+        "y": 470,
+        "width": 120,
+        "height": 120,
+        "borderRadius": 8
+      }
+    ],
+    "styling": {
+      "backgroundColor": "#1a1a2e",
+      "borderColor": "#D8AE48",
+      "borderWidth": 4,
+      "titleColor": "#D8AE48",
+      "subtitleColor": "#D8AE48",
+      "titleFont": "bold 20px Cinzel",
+      "subtitleFont": "12px Montserrat"
+    },
+    "assets": {
+      "previewImage": "/placeholder.svg"
+    },
+    "isActive": true
+  },
+  {
+    "id": "4shot-modern",
+    "name": "Modern Stack",
+    "layoutType": "4shot",
+    "description": "Contemporary vertical layout",
+    "frameMapping": [
+      {
+        "x": 120,
+        "y": 90,
+        "width": 160,
+        "height": 100,
+        "borderRadius": 12
+      },
+      {
+        "x": 120,
+        "y": 210,
+        "width": 160,
+        "height": 100,
+        "borderRadius": 12
+      },
+      {
+        "x": 120,
+        "y": 330,
+        "width": 160,
+        "height": 100,
+        "borderRadius": 12
+      },
+      {
+        "x": 120,
+        "y": 450,
+        "width": 160,
+        "height": 100,
+        "borderRadius": 12
+      }
+    ],
+    "styling": {
+      "backgroundColor": "#0a0a0a",
+      "borderColor": "#444444",
+      "borderWidth": 2,
+      "titleColor": "#ffffff",
+      "subtitleColor": "#888888",
+      "titleFont": "600 18px Montserrat",
+      "subtitleFont": "11px Montserrat"
+    },
+    "assets": {
+      "previewImage": "/placeholder.svg"
+    },
+    "isActive": true
+  }
+]
