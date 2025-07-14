@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Download, RotateCcw, Share2, Camera, Home, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 // @ts-ignore
 import gifshot from 'gifshot';
 import { Layout, CapturedPhoto } from '@/types/layout';
 import { Template } from '@/types/templates';
+import ShareModal from './ShareModal';
 
 interface FinalResultProps {
   layout: Layout;
@@ -12,15 +13,34 @@ interface FinalResultProps {
   photos: CapturedPhoto[];
   onStartOver: () => void;
   onBack: () => void;
+  onSessionComplete?: (finalImageUrl: string, gifUrl?: string) => void;
 }
 
-const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalResultProps) => {
+const FinalResult = ({ layout, template, photos, onStartOver, onBack, onSessionComplete }: FinalResultProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGeneratingGif, setIsGeneratingGif] = useState(false);
+  const [finalImageUrl, setFinalImageUrl] = useState<string>('');
+  const [generatedGifUrl, setGeneratedGifUrl] = useState<string>('');
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Check if any photos have GIF data
   const hasGifData = photos.some(photo => photo.gifData);
+
+  // Generate photo strip on component mount and save session
+  useEffect(() => {
+    const initializeSession = async () => {
+      await generatePhotoStrip();
+      
+      if (canvasRef.current && onSessionComplete && !finalImageUrl) {
+        const dataUrl = canvasRef.current.toDataURL('image/png', 0.9);
+        setFinalImageUrl(dataUrl);
+        onSessionComplete(dataUrl, generatedGifUrl || undefined);
+      }
+    };
+    
+    initializeSession();
+  }, []);
 
   // Calculate canvas dimensions based on template and layout
   const getCanvasDimensions = () => {
@@ -187,6 +207,7 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
         textBaseline: 'middle'
       }, (obj: any) => {
         if (!obj.error) {
+          setGeneratedGifUrl(obj.image);
           const link = document.createElement('a');
           link.download = `boothiecall-gif-${layout.id}-${Date.now()}.gif`;
           link.href = obj.image;
@@ -334,6 +355,7 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
               )}
               
               <Button
+                onClick={() => setIsShareModalOpen(true)}
                 variant="outline"
                 className="w-full border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
               >
@@ -401,6 +423,15 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
 
       {/* Hidden canvas for photo strip generation */}
       <canvas ref={canvasRef} className="hidden" />
+      
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        imageDataUrl={finalImageUrl || (canvasRef.current?.toDataURL('image/png', 0.9) || '')}
+        title={`${template.name} Photo Strip`}
+        description={`Check out my ${layout.name} photo strip created with BoothieCall!`}
+      />
     </div>
   );
 };
