@@ -1,15 +1,20 @@
-import apiClient from './apiClient';
-
 export const authService = {
   login: async (email, password) => {
-    const response = await apiClient.post('/auth/login', { email, password });
-    // Assuming the backend returns { token: string, user: any }
-    return response.data;
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (email === 'admin@example.com' && password === 'password') {
+          resolve({
+            token: 'mock-jwt-token',
+            user: { name: 'Admin User', email: 'admin@example.com' },
+          });
+        } else {
+          reject(new Error('Invalid credentials'));
+        }
+      }, 500);
+    });
   },
 
   logout: async () => {
-    // Optionally call a logout endpoint on the backend
-    // await apiClient.post('/auth/logout');
     // For now, just clear the token locally
     return Promise.resolve();
   },

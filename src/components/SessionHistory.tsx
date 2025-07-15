@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   History, 
   Download, 
@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { SessionStorageService } from '@/lib/sessionStorage';
+import { HybridStorageService } from '@/lib/hybridStorage';
 import { PhotoSession, SessionSummary, SessionStats } from '@/types/session';
 
 interface SessionHistoryProps {
@@ -33,55 +33,48 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ onClose, onReplaySessio
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('history');
   
-  const sessionStorage = SessionStorageService.getInstance();
+  const sessionStorage = HybridStorageService.getInstance();
+
+  const loadData = useCallback(async () => {
+    setSessions(await sessionStorage.getSessionSummaries());
+    setStats(await sessionStorage.getSessionStats());
+  }, [sessionStorage]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const loadData = () => {
-    setSessions(sessionStorage.getSessionSummaries());
-    setStats(sessionStorage.getSessionStats());
-  };
-
-  const handleViewSession = (sessionId: string) => {
-    const session = sessionStorage.getSession(sessionId);
+  const handleViewSession = useCallback(async (sessionId: string) => {
+    const session = await sessionStorage.getSession(sessionId);
     if (session) {
       setSelectedSession(session);
       setIsViewDialogOpen(true);
     }
-  };
+  }, [sessionStorage]);
 
-  const handleDeleteSession = (sessionId: string) => {
-    if (sessionStorage.deleteSession(sessionId)) {
-      loadData();
+  const handleDeleteSession = useCallback(async (sessionId: string) => {
+    if (await sessionStorage.deleteSession(sessionId)) {
+      await loadData();
     }
-  };
+  }, [sessionStorage, loadData]);
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(async () => {
     if (confirm('Are you sure you want to delete all photo sessions? This action cannot be undone.')) {
-      sessionStorage.clearAllSessions();
-      loadData();
+      await sessionStorage.clearAllSessions();
+      await loadData();
     }
-  };
+  }, [sessionStorage, loadData]);
 
-  const handleDownloadSession = (session: PhotoSession) => {
-    // Download the final image
-    const link = document.createElement('a');
-    link.download = `boothie-call-${session.id}.png`;
-    link.href = session.finalImageUrl;
-    link.click();
+  const handleCopyLink = useCallback((session: PhotoSession) => {
+    // For now, just copy the data URL to clipboard
+    navigator.clipboard.writeText(session.finalImageUrl).then(() => {
+      alert('Image data copied to clipboard!');
+    }).catch(() => {
+      alert('Unable to copy. Please download the image instead.');
+    });
+  }, []);
 
-    // Download GIF if available
-    if (session.gifUrl) {
-      const gifLink = document.createElement('a');
-      gifLink.download = `boothie-call-${session.id}.gif`;
-      gifLink.href = session.gifUrl;
-      gifLink.click();
-    }
-  };
-
-  const handleShareSession = async (session: PhotoSession) => {
+  const handleShareSession = useCallback(async (session: PhotoSession) => {
     if (navigator.share) {
       try {
         // Convert data URL to blob for sharing
@@ -102,16 +95,7 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ onClose, onReplaySessio
     } else {
       handleCopyLink(session);
     }
-  };
-
-  const handleCopyLink = (session: PhotoSession) => {
-    // For now, just copy the data URL to clipboard
-    navigator.clipboard.writeText(session.finalImageUrl).then(() => {
-      alert('Image data copied to clipboard!');
-    }).catch(() => {
-      alert('Unable to copy. Please download the image instead.');
-    });
-  };
+  }, [handleCopyLink]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

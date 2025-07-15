@@ -135,7 +135,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
     }
   };
 
-  const applyTransformations = async (inputUrl: string): Promise<string> => {
+  const applyTransformations = useCallback(async (inputUrl: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -160,7 +160,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
       };
       img.src = inputUrl;
     });
-  };
+  }, [rotation, isFlippedH, isFlippedV]);
 
   const handleDownload = () => {
     const link = document.createElement('a');

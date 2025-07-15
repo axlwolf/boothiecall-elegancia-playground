@@ -120,7 +120,7 @@ const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({ trigger }
         </DialogTrigger>
         
         <DialogContent 
-          className="max-w-2xl bg-gray-900 border-gray-700"
+          className="max-w-2xl max-h-[80vh] bg-gray-900 border-gray-700 overflow-y-auto"
           aria-labelledby="accessibility-settings-title"
           aria-describedby="accessibility-settings-description"
         >
@@ -140,7 +140,7 @@ const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({ trigger }
             </p>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-6 pr-2">
             {/* Current Status */}
             <Card className="card-elegancia">
               <CardHeader>

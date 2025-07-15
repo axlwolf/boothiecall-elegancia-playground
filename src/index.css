@@ -210,6 +210,18 @@
     }
   }
 
+  @keyframes flash {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.9;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
   /* Premium button styles */
   .btn-elegancia {
     @apply relative overflow-hidden bg-gradient-to-r from-gold-600 to-gold-400 text-primary-foreground;
@@ -314,6 +326,10 @@
 
   .animate-float {
     animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-flash {
+    animation: flash 0.3s ease-out;
   }
 
   /* Staggered animations */

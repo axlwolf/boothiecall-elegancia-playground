@@ -3,6 +3,41 @@ import { Template, TemplatesByLayout } from '@/types/templates';
 // Template cache for performance
 const templateCache: TemplatesByLayout = {};
 
+// Template data based on actual files in public/designs/
+const templateData: Record<string, Array<{id: string, name: string, description: string}>> = {
+  '1shot': [
+    { id: '1shot-design1', name: 'Classic Portrait', description: 'Elegant single frame design' },
+    { id: '1shot-design2', name: 'Modern Single', description: 'Contemporary portrait layout' },
+    { id: '1shot-design3', name: 'Artistic Frame', description: 'Creative single shot design' },
+    { id: '1shot-design4', name: 'Professional', description: 'Business-style portrait' },
+    { id: '1shot-design5', name: 'Vintage Style', description: 'Retro-inspired single frame' },
+    { id: '1shot-design6', name: 'Minimalist', description: 'Clean and simple design' },
+    { id: '1shot-design7', name: 'Bold Frame', description: 'Strong geometric borders' },
+    { id: '1shot-design8', name: 'Elegant Gold', description: 'Luxury gold accented frame' },
+    { id: '1shot-design9', name: 'Classic Round', description: 'Traditional circular frame' },
+    { id: '1shot-design10', name: 'Modern Edge', description: 'Contemporary angular design' }
+  ],
+  '3shot': [
+    { id: '3shot-design1', name: 'Triple Classic', description: 'Traditional three-frame strip' },
+    { id: '3shot-design2', name: 'Modern Triple', description: 'Contemporary three-shot layout' },
+    { id: '3shot-design3', name: 'Artistic Trio', description: 'Creative three-frame design' },
+    { id: '3shot-design4', name: 'Elegant Strip', description: 'Sophisticated three-shot' },
+    { id: '3shot-design5', name: 'Fun Frames', description: 'Playful three-frame layout' }
+  ],
+  '4shot': [
+    { id: '4shot-design1', name: 'Quad Classic', description: 'Traditional four-frame strip' },
+    { id: '4shot-design2', name: 'Modern Quad', description: 'Contemporary four-shot layout' },
+    { id: '4shot-design3', name: 'Story Strip', description: 'Narrative four-frame design' },
+    { id: '4shot-design4', name: 'Timeline', description: 'Sequential four-shot layout' },
+    { id: '4shot-design5', name: 'Gallery View', description: 'Artistic four-frame display' }
+  ],
+  '6shot': [
+    { id: '6shot-design1', name: 'Gallery Grid', description: 'Classic 2x3 photo grid' },
+    { id: '6shot-design2', name: 'Memory Wall', description: 'Collage-style six-shot' },
+    { id: '6shot-design3', name: 'Photo Matrix', description: 'Modern grid layout' }
+  ]
+};
+
 /**
  * Load templates for a specific layout type
  */
@@ -13,12 +48,11 @@ export const loadTemplatesByLayout = async (layoutType: string): Promise<Templat
   }
 
   try {
-    // Import template JSON file dynamically
-    const templatesModule = await import(`@/assets/designs/${layoutType}/templates.json`);
-    const templates: Template[] = templatesModule.default;
+    const layoutTemplates = templateData[layoutType] || [];
+    const templates: Template[] = layoutTemplates.map(templateInfo => createTemplateFromDesign(templateInfo, layoutType));
     
     // Cache the templates
-    templateCache[layoutType] = templates.filter(template => template.isActive);
+    templateCache[layoutType] = templates;
     
     return templateCache[layoutType];
   } catch (error) {
@@ -35,6 +69,66 @@ export const loadTemplatesByLayout = async (layoutType: string): Promise<Templat
 export const getTemplateById = async (templateId: string, layoutType: string): Promise<Template | null> => {
   const templates = await loadTemplatesByLayout(layoutType);
   return templates.find(template => template.id === templateId) || null;
+};
+
+/**
+ * Create a template from design data
+ */
+const createTemplateFromDesign = (templateInfo: {id: string, name: string, description: string}, layoutType: string): Template => {
+  const shotCount = parseInt(layoutType.replace('shot', ''));
+  
+  // Get frame mapping from frameMappings.ts data
+  const getFrameMapping = () => {
+    switch (shotCount) {
+      case 1:
+        return [{ x: 50, y: 50, width: 300, height: 450, borderRadius: 10 }];
+      case 3:
+        return [
+          { x: 50, y: 50, width: 300, height: 150, borderRadius: 5 },
+          { x: 50, y: 250, width: 300, height: 150, borderRadius: 5 },
+          { x: 50, y: 450, width: 300, height: 150, borderRadius: 5 }
+        ];
+      case 4:
+        return [
+          { x: 50, y: 50, width: 300, height: 120, borderRadius: 5 },
+          { x: 50, y: 200, width: 300, height: 120, borderRadius: 5 },
+          { x: 50, y: 350, width: 300, height: 120, borderRadius: 5 },
+          { x: 50, y: 500, width: 300, height: 120, borderRadius: 5 }
+        ];
+      case 6:
+        return [
+          { x: 20, y: 20, width: 160, height: 120, borderRadius: 5 },
+          { x: 220, y: 20, width: 160, height: 120, borderRadius: 5 },
+          { x: 20, y: 170, width: 160, height: 120, borderRadius: 5 },
+          { x: 220, y: 170, width: 160, height: 120, borderRadius: 5 },
+          { x: 20, y: 320, width: 160, height: 120, borderRadius: 5 },
+          { x: 220, y: 320, width: 160, height: 120, borderRadius: 5 }
+        ];
+      default:
+        return [{ x: 50, y: 50, width: 300, height: 450, borderRadius: 10 }];
+    }
+  };
+
+  return {
+    id: templateInfo.id,
+    name: templateInfo.name,
+    layoutType,
+    description: templateInfo.description,
+    frameMapping: getFrameMapping(),
+    styling: {
+      backgroundColor: '#1a1a2e',
+      borderColor: '#D8AE48',
+      borderWidth: 4,
+      titleColor: '#D8AE48',
+      subtitleColor: '#D8AE48',
+      titleFont: 'bold 24px Cinzel',
+      subtitleFont: '14px Montserrat'
+    },
+    assets: {
+      previewImage: `/designs/${templateInfo.id}.png`
+    },
+    isActive: true
+  };
 };
 
 /**
@@ -79,45 +173,8 @@ const createFallbackTemplate = (layoutType: string): Template => {
  * Generate canvas preview for template
  */
 export const generateTemplatePreview = (template: Template, canvasWidth: number = 120, canvasHeight: number = 160): string => {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  
-  if (!ctx) return '/placeholder.svg';
-  
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
-  
-  // Scale factor for preview
-  const scaleX = canvasWidth / 400;
-  const scaleY = canvasHeight / (template.layoutType === '1shot' ? 600 : 650);
-  
-  // Background
-  ctx.fillStyle = template.styling.backgroundColor;
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-  
-  // Border
-  ctx.strokeStyle = template.styling.borderColor;
-  ctx.lineWidth = Math.max(1, template.styling.borderWidth * scaleX);
-  ctx.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
-  
-  // Draw frame placeholders
-  template.frameMapping.forEach(frame => {
-    const x = frame.x * scaleX;
-    const y = frame.y * scaleY;
-    const width = frame.width * scaleX;
-    const height = frame.height * scaleY;
-    
-    // Frame background
-    ctx.fillStyle = '#333333';
-    ctx.fillRect(x, y, width, height);
-    
-    // Frame border
-    ctx.strokeStyle = template.styling.borderColor;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, width, height);
-  });
-  
-  return canvas.toDataURL('image/png');
+  // Return the actual template image path
+  return template.assets.previewImage;
 };
 
 /**

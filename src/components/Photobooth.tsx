@@ -10,7 +10,7 @@ import SessionHistory from './SessionHistory';
 import { Layout, CapturedPhoto } from '@/types/layout';
 import { Template } from '@/types/templates';
 import { PhotoSession } from '@/types/session';
-import { SessionStorageService } from '@/lib/sessionStorage';
+import { HybridStorageService } from '@/lib/hybridStorage';
 
 type Step = 'landing' | 'layout' | 'design' | 'capture' | 'filters' | 'edit' | 'result' | 'history';
 
@@ -24,7 +24,7 @@ const Photobooth = () => {
   const [finalImageUrl, setFinalImageUrl] = useState<string>('');
   const [finalGifUrl, setFinalGifUrl] = useState<string>('');
   
-  const sessionStorage = SessionStorageService.getInstance();
+  const sessionStorage = HybridStorageService.getInstance();
 
   const handleStart = () => {
     setSessionStartTime(Date.now());
@@ -64,7 +64,7 @@ const Photobooth = () => {
     saveCurrentSession(finalImageDataUrl, gifDataUrl);
   };
 
-  const saveCurrentSession = (finalImageDataUrl: string, gifDataUrl?: string) => {
+  const saveCurrentSession = async (finalImageDataUrl: string, gifDataUrl?: string) => {
     if (!selectedLayout || !selectedTemplate) return;
 
     const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000);
@@ -102,7 +102,7 @@ const Photobooth = () => {
       }
     };
 
-    sessionStorage.saveSession(session);
+    await sessionStorage.saveSession(session);
   };
 
   const handleReplaySession = (session: PhotoSession) => {

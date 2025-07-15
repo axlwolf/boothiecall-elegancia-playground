@@ -21,9 +21,9 @@ const Analytics: React.FC = () => {
     <div>
       <PageHeader title="Analytics" description="View usage statistics and insights." />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <DailySessionsChart data={dailySessions} />
-        <PopularFiltersChart data={popularFilters} />
-        <LayoutUsageChart data={layoutUsage} />
+        <div className="col-span-1 md:col-span-2 lg:col-span-1"><DailySessionsChart data={dailySessions} /></div>
+        <div className="col-span-1 md:col-span-2 lg:col-span-1"><PopularFiltersChart data={popularFilters} /></div>
+        <div className="col-span-1 md:col-span-2 lg:col-span-1"><LayoutUsageChart data={layoutUsage} /></div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Printer, 
   Download, 
@@ -54,14 +54,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Update preview when settings change
-  useEffect(() => {
-    if (isOpen && imageUrl) {
-      generatePreview();
-      validateSettings();
-    }
-  }, [settings, isOpen, imageUrl]);
-
-  const generatePreview = async () => {
+  const generatePreview = useCallback(async () => {
     setIsGenerating(true);
     try {
       const optimizedImage = await printService.generatePrintImage(imageUrl, settings);
@@ -71,12 +64,19 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [imageUrl, settings, printService, setPreviewUrl, setIsGenerating]);
 
-  const validateSettings = () => {
+  const validateSettings = useCallback(() => {
     const result = printService.validatePrintSettings(settings);
     setValidation(result);
-  };
+  }, [settings, printService, setValidation]);
+
+  useEffect(() => {
+    if (isOpen && imageUrl) {
+      generatePreview();
+      validateSettings();
+    }
+  }, [settings, isOpen, imageUrl, generatePreview, validateSettings]);
 
   const handleFormatChange = (formatId: string) => {
     const format = PRINT_FORMATS.find(f => f.id === formatId);

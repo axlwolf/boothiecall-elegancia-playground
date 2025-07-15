@@ -69,7 +69,7 @@ export const AddUserDialog: React.FC<AddUserDialogProps> = ({ open, onOpenChange
                 <SelectValue placeholder="Select a tenant" />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                {tenants.map(tenant => (
+                {Array.isArray(tenants) && tenants.map(tenant => (
                   <SelectItem key={tenant.id} value={tenant.id}>{tenant.name}</SelectItem>
                 ))}
               </SelectContent>

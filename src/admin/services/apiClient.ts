@@ -1,16 +1,21 @@
 import axios from 'axios';
 
+// Base API URL - adjust for your environment
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
+// Create axios instance with default configuration
 const apiClient = axios.create({
-  baseURL: '/api/admin', // Base URL for admin API endpoints
+  baseURL: BASE_URL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor to add JWT token
+// Request interceptor to add authentication token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -21,15 +26,16 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling (e.g., 401, 403)
+// Response interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      // Handle unauthorized/forbidden errors, e.g., redirect to login
-      console.error('Authentication error', error.response.status);
-      // Optionally, redirect to login page
-      // window.location.href = '/admin/login';
+    if (error.response?.status === 401) {
+      // Unauthorized - redirect to login
+      localStorage.removeItem('authToken');
+      window.location.href = '/admin/login';
     }
     return Promise.reject(error);
   }
