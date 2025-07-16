@@ -39,6 +39,12 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
         setStream(mediaStream);
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
+          // Ensure video starts playing immediately
+          videoRef.current.onloadedmetadata = () => {
+            if (videoRef.current) {
+              videoRef.current.play().catch(console.error);
+            }
+          };
         }
       } catch (err) {
         console.error('Error accessing camera:', err);
@@ -49,11 +55,18 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
     initCamera();
 
     return () => {
+      // Cleanup will be handled by another useEffect
+    };
+  }, []); // Remove stream dependency to prevent re-initialization
+
+  // Separate cleanup effect
+  useEffect(() => {
+    return () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [stream]);
 
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -133,7 +146,7 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
     } catch (error) {
       console.error('Error starting GIF recording:', error);
     }
-  }, [stream, photos]);
+  }, [stream, photos, recordedChunksRef, setIsRecordingGif, setPhotos]);
 
   const capturePhotoWithGif = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -180,16 +193,20 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
       setCountdown(prev => {
         if (prev === null || prev <= 1) {
           clearInterval(countdownInterval);
+          // Show flash effect right before capture
           setTimeout(() => {
             if (withGif) {
               capturePhotoWithGif();
             } else {
               capturePhoto();
             }
-            setCountdown(null);
-            setIsCapturing(false);
+            // Reset states after a brief delay
+            setTimeout(() => {
+              setCountdown(null);
+              setIsCapturing(false);
+            }, 200);
           }, 100);
-          return null;
+          return 0; // Show flash when countdown hits 0
         }
         return prev - 1;
       });
@@ -239,6 +256,13 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
                 playsInline
                 muted
                 className="w-full h-full object-cover"
+                style={{ background: '#000' }}
+                onLoadedMetadata={() => {
+                  // Ensure video is playing smoothly
+                  if (videoRef.current) {
+                    videoRef.current.play().catch(console.error);
+                  }
+                }}
               />
               
               {/* Countdown Overlay */}
@@ -251,8 +275,8 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
               )}
 
               {/* Flash Effect */}
-              {countdown === null && isCapturing && (
-                <div className="absolute inset-0 bg-white opacity-80 animate-ping" />
+              {countdown === 0 && (
+                <div className="absolute inset-0 bg-white opacity-90 animate-flash" />
               )}
             </div>
 

@@ -219,7 +219,7 @@ export class FilterEngine {
    */
   private watercolorEffect(imageData: ImageData): ImageData {
     // Apply blur for soft effect
-    let result = applyConvolution(imageData, kernels.blur, 9);
+    const result = applyConvolution(imageData, kernels.blur, 9);
     
     // Reduce color palette
     const data = result.data;

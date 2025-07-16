@@ -76,17 +76,33 @@ The app follows a state machine pattern with 5 main steps:
 - `Photobooth.tsx` coordinates overall application state
 - Props-based communication between parent and child components
 
+**Session Storage (Hybrid Storage System):**
+- `HybridStorageService` (`src/lib/hybridStorage.ts`) - Intelligent storage with automatic fallback
+- Starts with localStorage for speed, falls back to IndexedDB when quota exceeded
+- Automatic data migration between storage systems
+- Supports up to 50 recent sessions with automatic cleanup
+- Session history, statistics, and export/import functionality
+
 **Types & Interfaces:**
 - `Layout` interface for photo strip configurations
 - `CapturedPhoto` interface for photo data with metadata
+- `PhotoSession` interface for complete session data with metadata
 - TypeScript configured with relaxed settings (no strict null checks)
 
 ### File Structure Notes
 
 **Assets:** Static images in `src/assets/` including hero gallery background
 **Hooks:** Custom React hooks in `src/hooks/` (mobile detection, toast)
+**Services:** Core services in `src/lib/` including storage, template, and filter systems
 **Utils:** Utility functions in `src/lib/utils.ts` (cn helper for class merging)
 **Configuration:** Vite configured for path aliases (`@` -> `src`)
+
+**Admin Panel:** Complete admin interface for content management
+- `src/admin/` - Full admin dashboard with analytics, user management, and settings
+- Authentication system with JWT tokens
+- Data tables with sorting, filtering, and pagination
+- Asset management for templates and designs
+- User analytics and session tracking
 
 ### Development Guidelines
 
@@ -99,6 +115,8 @@ The app follows a state machine pattern with 5 main steps:
 - MediaRecorder for GIF capture
 - Camera access via getUserMedia
 - Canvas for image processing and compositing
+- IndexedDB for large data storage (automatic fallback)
+- localStorage for session data (primary storage)
 
 ### Important Implementation Details
 
@@ -118,6 +136,12 @@ The app follows a state machine pattern with 5 main steps:
 - Adaptive camera viewport handling
 - Smart pagination that hides when not needed
 
+**Storage System:**
+- Hybrid storage automatically handles localStorage quota limits
+- Seamless fallback to IndexedDB for unlimited storage capacity
+- Session data includes photos, metadata, filters, and user analytics
+- Export/import functionality for backup and data portability
+
 ## Common Workflows
 
 When adding new features:
@@ -131,3 +155,44 @@ When modifying the design system:
 2. Extend Tailwind configuration in `tailwind.config.ts` if needed
 3. Ensure gold accent colors (#D8AE48) remain consistent
 4. Test responsive behavior on mobile devices
+
+## Admin Panel (GEMINI Implementation)
+
+The admin panel provides comprehensive content management and analytics:
+
+### Admin Architecture
+- **Authentication:** JWT-based auth with localStorage persistence
+- **Routing:** Protected routes with automatic redirect on unauthorized access
+- **State Management:** TanStack Query for server state, React Context for auth
+- **UI Framework:** shadcn/ui components with custom admin styling
+
+### Admin Features
+- **Dashboard:** Overview with key metrics, recent activity, and quick actions
+- **Analytics:** Session tracking, user behavior analysis, usage statistics
+- **User Management:** CRUD operations for user accounts with role-based access
+- **Asset Management:** Template and design management with file upload
+- **Settings:** System configuration, output formats, tenant management
+- **Data Tables:** Advanced filtering, sorting, pagination with export capabilities
+
+### Admin Services
+- `src/admin/services/apiClient.ts` - Axios client with auth interceptors
+- `src/admin/services/authService.ts` - Authentication and user management
+- `src/admin/services/analyticsService.ts` - Analytics data processing
+- `src/admin/services/userService.ts` - User CRUD operations
+- `src/admin/services/tenantService.ts` - Multi-tenant support
+- `src/admin/services/outputFormatService.ts` - Export format management
+
+### Admin Components
+- `src/admin/components/AdminLayout.tsx` - Admin shell with navigation
+- `src/admin/components/DataTable.tsx` - Reusable data table with advanced features
+- `src/admin/pages/` - Individual admin pages (Dashboard, Analytics, Settings, etc.)
+
+### Environment Variables for Admin
+- `VITE_API_URL` - API base URL (automatically falls back to '/api')
+- Admin auth tokens stored in localStorage as 'authToken'
+
+### Admin Development Notes
+- Uses Vite environment variables (`import.meta.env` not `process.env`)
+- Implements automatic localStorage quota handling via HybridStorageService
+- Real-time updates using TanStack Query with background refetching
+- Responsive design optimized for desktop admin workflows

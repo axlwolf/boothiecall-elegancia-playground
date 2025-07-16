@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { Camera, Sparkles, Image, Zap, Download } from "lucide-react";
+import { Camera, Sparkles, Image, Zap, Download, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroGallery from "@/assets/hero-gallery.jpg";
 
 interface LandingProps {
   onStart: () => void;
+  onShowHistory?: () => void;
 }
 
-const Landing = ({ onStart }: LandingProps) => {
+const Landing = ({ onStart, onShowHistory }: LandingProps) => {
   const [shootingStars, setShootingStars] = useState<
     Array<{ id: number; delay: number }>
   >([]);
@@ -95,8 +96,8 @@ const Landing = ({ onStart }: LandingProps) => {
           </div>
         </div>
 
-        {/* CTA Button */}
-        <div className="animate-slide-up animate-stagger-5 px-4 mb-16">
+        {/* CTA Buttons */}
+        <div className="animate-slide-up animate-stagger-5 px-4 mb-16 space-y-4">
           <Button
             onClick={onStart}
             className="btn-elegancia text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 animate-pulse-glow"
@@ -104,6 +105,19 @@ const Landing = ({ onStart }: LandingProps) => {
             <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
             Start Playground
           </Button>
+          
+          {onShowHistory && (
+            <div>
+              <Button
+                onClick={onShowHistory}
+                variant="outline"
+                className="border-gold-400/30 text-gold-300 hover:bg-gold-400/10 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
+              >
+                <History className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                View History
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Features Grid */}

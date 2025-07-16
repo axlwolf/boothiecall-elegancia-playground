@@ -13,4 +13,9 @@ export const authService = {
       }, 500);
     });
   },
+
+  logout: async () => {
+    // For now, just clear the token locally
+    return Promise.resolve();
+  },
 };

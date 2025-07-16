@@ -210,6 +210,18 @@
     }
   }
 
+  @keyframes flash {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.9;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
   /* Premium button styles */
   .btn-elegancia {
     @apply relative overflow-hidden bg-gradient-to-r from-gold-600 to-gold-400 text-primary-foreground;
@@ -316,10 +328,188 @@
     animation: float 3s ease-in-out infinite;
   }
 
+  .animate-flash {
+    animation: flash 0.3s ease-out;
+  }
+
   /* Staggered animations */
   .animate-stagger-1 { animation-delay: 0.1s; }
   .animate-stagger-2 { animation-delay: 0.2s; }
   .animate-stagger-3 { animation-delay: 0.3s; }
   .animate-stagger-4 { animation-delay: 0.4s; }
   .animate-stagger-5 { animation-delay: 0.5s; }
+}
+
+/* Accessibility Enhancements */
+@layer utilities {
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Focus visible enhancements */
+  .focus-visible:focus {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+
+  /* High contrast mode */
+  .high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+    --primary: 45 100% 70%;
+    --secondary: 0 0% 20%;
+    --muted: 0 0% 15%;
+    --border: 0 0% 30%;
+  }
+
+  .high-contrast button,
+  .high-contrast .card-elegancia,
+  .high-contrast input,
+  .high-contrast select {
+    border: 2px solid hsl(var(--foreground)) !important;
+  }
+
+  .high-contrast a,
+  .high-contrast button {
+    text-decoration: underline;
+  }
+
+  /* Reduced motion */
+  .reduce-motion *,
+  .reduce-motion *::before,
+  .reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Large text mode */
+  .large-text {
+    font-size: 120% !important;
+  }
+
+  .large-text h1 {
+    font-size: 3.5rem !important;
+  }
+
+  .large-text h2 {
+    font-size: 2.5rem !important;
+  }
+
+  .large-text h3 {
+    font-size: 2rem !important;
+  }
+
+  .large-text p,
+  .large-text span,
+  .large-text div {
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+  }
+
+  .large-text button {
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1.1rem !important;
+  }
+
+  /* Keyboard navigation enhancements */
+  .keyboard-navigation *:focus {
+    outline: 3px solid hsl(var(--primary));
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 5px hsl(var(--primary));
+  }
+
+  .keyboard-navigation button:focus,
+  .keyboard-navigation a:focus,
+  .keyboard-navigation input:focus,
+  .keyboard-navigation select:focus,
+  .keyboard-navigation textarea:focus {
+    outline: 3px solid hsl(var(--primary));
+    outline-offset: 2px;
+    background-color: hsl(var(--primary) / 0.1);
+  }
+
+  /* Screen reader mode optimizations */
+  .screen-reader-mode .animate-fade-in,
+  .screen-reader-mode .animate-slide-up,
+  .screen-reader-mode .animate-scale-in,
+  .screen-reader-mode .animate-pulse-glow {
+    animation: none !important;
+  }
+
+  .screen-reader-mode .shooting-star {
+    display: none !important;
+  }
+
+  /* Skip links */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+    font-weight: 600;
+  }
+
+  .skip-link:focus {
+    top: 6px;
+  }
+
+  /* Accessible button states */
+  button:disabled,
+  button[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  button[aria-pressed="true"] {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Live regions for screen readers */
+  [aria-live] {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* Accessible card hover states */
+  .card-elegancia:hover {
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .card-elegancia:focus-within {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 1px hsl(var(--primary));
+  }
 }

@@ -1,49 +1,52 @@
-import { useState } from 'react';
-import { Check, ArrowRight, Image as ImageIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Check, ArrowRight, Image as ImageIcon, Palette, Sliders } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { Layout, CapturedPhoto } from '@/types/layout';
-
-interface Filter {
-  id: string;
-  name: string;
-  cssFilter: string;
-}
+import { enhancedFilters, FilterCategory, EnhancedFilter } from '@/types/filters';
+import { FilterEngine } from '@/lib/filterEngine';
 
 interface FilterSelectionProps {
   layout: Layout;
   photos: CapturedPhoto[];
   onComplete: () => void;
   onBack: () => void;
+  onEditPhoto?: (photoIndex: number) => void;
 }
 
-const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelectionProps) => {
+const FilterSelection = ({ layout, photos, onComplete, onBack, onEditPhoto }: FilterSelectionProps) => {
   const [selectedFilters, setSelectedFilters] = useState<{ [photoId: string]: string }>({});
   const [currentPage, setCurrentPage] = useState(0);
 
-  const filters: Filter[] = [
-    { id: 'none', name: 'Original', cssFilter: 'none' },
-    { id: 'noir', name: 'Noir', cssFilter: 'grayscale(100%) contrast(120%)' },
-    { id: 'vintage', name: 'Vintage', cssFilter: 'sepia(50%) contrast(120%) brightness(110%)' },
-    { id: 'glam', name: 'Glam', cssFilter: 'contrast(130%) saturate(130%) brightness(110%)' },
-    { id: 'sketch', name: 'Sketch', cssFilter: 'grayscale(100%) contrast(200%) brightness(90%)' },
-    { id: 'sharp', name: 'Extra Sharp', cssFilter: 'contrast(150%) brightness(105%)' },
-    { id: 'warm', name: 'Warm', cssFilter: 'sepia(20%) contrast(110%) brightness(110%)' },
-    { id: 'cool', name: 'Cool', cssFilter: 'hue-rotate(180deg) saturate(120%)' },
-    { id: 'faded', name: 'Faded', cssFilter: 'contrast(80%) brightness(120%) saturate(80%)' },
-    { id: 'blackwhite', name: 'B&W', cssFilter: 'grayscale(100%)' },
-    { id: 'sepia', name: 'Sepia', cssFilter: 'sepia(100%)' },
-    { id: 'bright', name: 'Brightness', cssFilter: 'brightness(130%)' },
-    { id: 'contrast', name: 'Contrast', cssFilter: 'contrast(150%)' },
-    { id: 'blur', name: 'Blur', cssFilter: 'blur(1px)' },
-    { id: 'invert', name: 'Invert', cssFilter: 'invert(100%)' }
-  ];
+  const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('basic');
+  const [beforeAfterMode, setBeforeAfterMode] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  const filterEngine = FilterEngine.getInstance();
+  
+  // Group filters by category
+  const filtersByCategory = enhancedFilters.reduce((acc, filter) => {
+    if (!acc[filter.category]) {
+      acc[filter.category] = [];
+    }
+    acc[filter.category].push(filter);
+    return acc;
+  }, {} as Record<FilterCategory, EnhancedFilter[]>);
+  
+  const currentFilters = filtersByCategory[selectedCategory] || [];
 
-  const filtersPerPage = 6;
-  const totalPages = Math.ceil(filters.length / filtersPerPage);
-  const currentFilters = filters.slice(
+  const filtersPerPage = 8;
+  const totalPages = Math.ceil(currentFilters.length / filtersPerPage);
+  const pageFilters = currentFilters.slice(
     currentPage * filtersPerPage,
     (currentPage + 1) * filtersPerPage
   );
+  
+  // Reset page when category changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [selectedCategory]);
 
   const handleFilterSelect = (photoId: string, filterId: string) => {
     setSelectedFilters(prev => ({
@@ -60,9 +63,23 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
     setSelectedFilters(newFilters);
   };
 
-  const getFilterStyle = (filterId: string) => {
-    const filter = filters.find(f => f.id === filterId);
-    return filter ? { filter: filter.cssFilter } : {};
+  const getFilterStyle = (filter: EnhancedFilter) => {
+    return filter.cssFilter ? { filter: filter.cssFilter } : {};
+  };
+  
+  const getCategoryIcon = (category: FilterCategory) => {
+    switch (category) {
+      case 'basic': return '🎯';
+      case 'artistic': return '🎨';
+      case 'vintage': return '📸';
+      case 'creative': return '✨';
+      case 'black-white': return '⚫';
+      default: return '🎭';
+    }
+  };
+  
+  const getCategoryBadgeCount = (category: FilterCategory) => {
+    return filtersByCategory[category]?.length || 0;
   };
 
   return (
@@ -77,31 +94,117 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
         </p>
       </div>
 
+      {/* Filter Categories */}
+      <div className="mb-8">
+        <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as FilterCategory)}>
+          <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 border border-gold-400/20">
+            {(Object.keys(filtersByCategory) as FilterCategory[]).map(category => (
+              <TabsTrigger 
+                key={category}
+                value={category}
+                className="flex items-center gap-2 data-[state=active]:bg-gold-500/20 data-[state=active]:text-gold-300"
+              >
+                <span className="text-lg">{getCategoryIcon(category)}</span>
+                <div className="hidden sm:flex flex-col">
+                  <span className="capitalize font-montserrat text-xs">{category.replace('-', ' ')}</span>
+                  <Badge variant="secondary" className="text-xs px-1 h-4">
+                    {getCategoryBadgeCount(category)}
+                  </Badge>
+                </div>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Photo Preview */}
         <div className="space-y-6">
-          <h3 className="font-cinzel font-semibold text-xl text-center">
-            Photo Preview
-          </h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-cinzel font-semibold text-xl">
+              Photo Preview
+            </h3>
+            <Button
+              onClick={() => setBeforeAfterMode(!beforeAfterMode)}
+              variant="outline"
+              size="sm"
+              className="border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
+            >
+              <ImageIcon className="w-4 h-4 mr-2" />
+              {beforeAfterMode ? 'Show Filtered' : 'Before/After'}
+            </Button>
+          </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {photos.map((photo, index) => (
-              <div key={photo.id} className="space-y-2">
-                <div className="photo-frame aspect-square">
-                  <img
-                    src={photo.dataUrl}
-                    alt={`Photo ${index + 1}`}
-                    className="w-full h-full object-cover rounded-lg transition-all duration-300"
-                    style={getFilterStyle(selectedFilters[photo.id] || 'none')}
-                  />
+            {photos.map((photo, index) => {
+              const selectedFilter = enhancedFilters.find(f => f.id === selectedFilters[photo.id]);
+              return (
+                <div key={photo.id} className="space-y-2">
+                  <div className="photo-frame aspect-square relative overflow-hidden group">
+                    {beforeAfterMode && selectedFilter ? (
+                      <div className="w-full h-full relative">
+                        {/* Before/After split view */}
+                        <div className="absolute inset-0 flex">
+                          <div className="w-1/2 overflow-hidden">
+                            <img
+                              src={photo.dataUrl}
+                              alt={`Photo ${index + 1} - Original`}
+                              className="w-full h-full object-cover"
+                              style={{ transform: 'translateX(0)' }}
+                            />
+                          </div>
+                          <div className="w-1/2 overflow-hidden">
+                            <img
+                              src={photo.dataUrl}
+                              alt={`Photo ${index + 1} - Filtered`}
+                              className="w-full h-full object-cover"
+                              style={{ 
+                                ...getFilterStyle(selectedFilter),
+                                transform: 'translateX(-100%)'
+                              }}
+                            />
+                          </div>
+                        </div>
+                        {/* Divider line */}
+                        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gold-400 z-10" />
+                        {/* Labels */}
+                        <div className="absolute top-2 left-2 text-xs bg-black/50 text-white px-2 py-1 rounded">
+                          Original
+                        </div>
+                        <div className="absolute top-2 right-2 text-xs bg-black/50 text-white px-2 py-1 rounded">
+                          {selectedFilter.name}
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={photo.dataUrl}
+                        alt={`Photo ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg transition-all duration-300"
+                        style={selectedFilter ? getFilterStyle(selectedFilter) : {}}
+                      />
+                    )}
+                    
+                    {/* Edit Photo Button - appears on hover */}
+                    {onEditPhoto && (
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Button
+                          onClick={() => onEditPhoto(index)}
+                          variant="outline"
+                          size="sm"
+                          className="border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
+                        >
+                          <Sliders className="w-4 h-4 mr-2" />
+                          Edit Photo
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center text-sm text-muted-foreground font-montserrat">
+                    Photo {index + 1} - {selectedFilter?.name || 'Original'}
+                  </p>
                 </div>
-                <p className="text-center text-sm text-muted-foreground font-montserrat">
-                  Photo {index + 1} - {
-                    filters.find(f => f.id === selectedFilters[photo.id])?.name || 'Original'
-                  }
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -109,7 +212,7 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="font-cinzel font-semibold text-xl">
-              Choose Filters
+              {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1).replace('-', ' ')} Filters
             </h3>
             <div className="flex gap-2">
               {totalPages > 1 && (
@@ -141,7 +244,7 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
           <div className="card-elegancia p-4">
             <h4 className="font-montserrat font-semibold mb-3">Quick Apply</h4>
             <div className="grid grid-cols-2 gap-2">
-              {currentFilters.slice(0, 4).map(filter => (
+              {pageFilters.slice(0, 4).map(filter => (
                 <Button
                   key={filter.id}
                   onClick={() => applyFilterToAll(filter.id)}
@@ -157,30 +260,37 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
 
           {/* Filter Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {currentFilters.map(filter => (
-              <div key={filter.id} className="card-elegancia p-3 cursor-pointer">
+            {pageFilters.map(filter => (
+              <div key={filter.id} className="card-elegancia p-3 cursor-pointer hover:bg-gray-800/50 transition-colors">
                 <div className="aspect-square mb-2 bg-gradient-card rounded-lg overflow-hidden">
                   <div
-                    className="w-full h-full bg-center bg-cover"
+                    className="w-full h-full bg-center bg-cover transition-all duration-300 hover:scale-105"
                     style={{
                       backgroundImage: `url(${photos[0]?.dataUrl})`,
-                      ...getFilterStyle(filter.id)
+                      ...getFilterStyle(filter)
                     }}
                   />
                 </div>
-                <p className="text-center text-sm font-montserrat font-medium">
-                  {filter.name}
-                </p>
+                <div className="text-center mb-2">
+                  <p className="text-sm font-montserrat font-medium mb-1">
+                    {filter.name}
+                  </p>
+                  {filter.description && (
+                    <p className="text-xs text-muted-foreground">
+                      {filter.description}
+                    </p>
+                  )}
+                </div>
                 
                 {/* Individual Photo Selection */}
-                <div className="mt-2 space-y-1">
+                <div className="space-y-1">
                   {photos.map((photo, index) => (
                     <button
                       key={photo.id}
                       onClick={() => handleFilterSelect(photo.id, filter.id)}
                       className={`w-full text-xs px-2 py-1 rounded transition-colors ${
                         selectedFilters[photo.id] === filter.id
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'bg-gold-500/20 text-gold-300 border border-gold-500/30'
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}
                     >
@@ -199,7 +309,7 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
           {totalPages > 1 && (
             <div className="text-center">
               <p className="text-sm text-muted-foreground font-montserrat">
-                Page {currentPage + 1} of {totalPages}
+                Page {currentPage + 1} of {totalPages} • {currentFilters.length} filters in {selectedCategory.replace('-', ' ')}
               </p>
             </div>
           )}
@@ -216,13 +326,26 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
           Back to Photos
         </Button>
         
-        <Button
-          onClick={onComplete}
-          className="btn-elegancia animate-pulse-glow"
-        >
-          Continue to Design
-          <ArrowRight className="w-5 h-5 ml-2" />
-        </Button>
+        <div className="flex gap-3">
+          {onEditPhoto && photos.length > 0 && (
+            <Button
+              onClick={() => onEditPhoto(0)}
+              variant="outline"
+              className="border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
+            >
+              <Sliders className="w-4 h-4 mr-2" />
+              Advanced Edit
+            </Button>
+          )}
+          
+          <Button
+            onClick={onComplete}
+            className="btn-elegancia animate-pulse-glow"
+          >
+            Continue to Design
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
       </div>
     </div>
   );
