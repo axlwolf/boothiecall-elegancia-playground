@@ -27,7 +27,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/playground">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/admin/login" element={<Login />} />

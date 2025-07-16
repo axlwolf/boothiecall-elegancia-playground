@@ -27,7 +27,7 @@ export interface Template {
   name: string;
   layoutType: string;
   description: string;
-  frameMapping: FrameMapping[];
+  frameMapping: FrameCoordinates[];
   styling: TemplateStyling;
   assets: TemplateAssets;
   isActive: boolean;

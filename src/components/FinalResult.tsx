@@ -1,10 +1,14 @@
-import { useState, useRef } from 'react';
-import { Download, RotateCcw, Share2, Camera, Home, Video } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Download, RotateCcw, Share2, Camera, Home, Video, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-// @ts-ignore
+// @ts-expect-error - gifshot library doesn't have TypeScript definitions
 import gifshot from 'gifshot';
 import { Layout, CapturedPhoto } from '@/types/layout';
 import { Template } from '@/types/templates';
+import { FrameMapping } from '@/types';
+import ShareModal from './ShareModal';
+import PrintPreview from './PrintPreview';
+import frameMappings from './frameMappings';
 
 interface FinalResultProps {
   layout: Layout;
@@ -12,18 +16,23 @@ interface FinalResultProps {
   photos: CapturedPhoto[];
   onStartOver: () => void;
   onBack: () => void;
+  onSessionComplete?: (finalImageUrl: string, gifUrl?: string) => void;
 }
 
-const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalResultProps) => {
+const FinalResult = ({ layout, template, photos, onStartOver, onBack, onSessionComplete }: FinalResultProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGeneratingGif, setIsGeneratingGif] = useState(false);
+  const [finalImageUrl, setFinalImageUrl] = useState<string>('');
+  const [generatedGifUrl, setGeneratedGifUrl] = useState<string>('');
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Check if any photos have GIF data
   const hasGifData = photos.some(photo => photo.gifData);
 
   // Calculate canvas dimensions based on template and layout
-  const getCanvasDimensions = () => {
+  const getCanvasDimensions = useCallback(() => {
     const baseWidth = 400;
     let baseHeight = 600;
     
@@ -45,9 +54,9 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
     }
     
     return { width: baseWidth, height: baseHeight };
-  };
+  }, [layout.shots]);
 
-  const generatePhotoStrip = async () => {
+  const generatePhotoStrip = useCallback(async () => {
     if (!canvasRef.current) return;
     
     // Fallback template if none provided
@@ -57,83 +66,93 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
     }
     
     try {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas dimensions
-    const { width: stripWidth, height: stripHeight } = getCanvasDimensions();
-    canvas.width = stripWidth;
-    canvas.height = stripHeight;
-
-    // Background using template styling
-    ctx.fillStyle = template.styling.backgroundColor;
-    ctx.fillRect(0, 0, stripWidth, stripHeight);
-
-    // Border using template styling
-    ctx.strokeStyle = template.styling.borderColor;
-    ctx.lineWidth = template.styling.borderWidth;
-    ctx.strokeRect(
-      template.styling.borderWidth / 2,
-      template.styling.borderWidth / 2,
-      stripWidth - template.styling.borderWidth,
-      stripHeight - template.styling.borderWidth
-    );
-
-    // Title using template styling
-    ctx.fillStyle = template.styling.titleColor;
-    ctx.font = template.styling.titleFont;
-    ctx.textAlign = 'center';
-    ctx.fillText('BoothieCall', stripWidth / 2, 40);
-
-    // Load and draw photos using template frame mapping
-    const photoPromises = photos.map((photo, index) => {
-      return new Promise<void>((resolve) => {
-        if (index >= template.frameMapping.length) {
-          resolve();
-          return;
-        }
+      // Get frame mapping for this template
+      const frameMapping = frameMappings[template.id];
+      if (!frameMapping) {
+        console.error('No frame mapping found for template:', template.id);
+        // Fallback to simple generation if template fails
+        const { width: stripWidth, height: stripHeight } = getCanvasDimensions();
+        const canvas = canvasRef.current!;
+        const ctx = canvas.getContext('2d')!;
         
-        const frame = template.frameMapping[index];
-        const img = new Image();
-        img.onload = () => {
-          // Draw photo with template-defined dimensions and position
-          ctx.save();
-          ctx.beginPath();
-          if (frame.borderRadius) {
-            ctx.roundRect(frame.x, frame.y, frame.width, frame.height, frame.borderRadius);
-          } else {
-            ctx.rect(frame.x, frame.y, frame.width, frame.height);
-          }
-          ctx.clip();
-          ctx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
-          ctx.restore();
+        // Simple fallback styling
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, stripWidth, stripHeight);
+        ctx.strokeStyle = '#D8AE48';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(2, 2, stripWidth - 4, stripHeight - 4);
+        return;
+      }
 
-          // Photo border using template styling
-          ctx.strokeStyle = template.styling.borderColor;
-          ctx.lineWidth = Math.max(1, template.styling.borderWidth / 2);
-          if (frame.borderRadius) {
-            ctx.beginPath();
-            ctx.roundRect(frame.x, frame.y, frame.width, frame.height, frame.borderRadius);
-            ctx.stroke();
-          } else {
-            ctx.strokeRect(frame.x, frame.y, frame.width, frame.height);
-          }
+      // Set canvas dimensions to match frame dimensions
+      canvas.width = frameMapping.frameWidth;
+      canvas.height = frameMapping.frameHeight;
 
+      // Load and draw the background frame first
+      const frameImg = new Image();
+      await new Promise<void>((resolve) => {
+        frameImg.onload = () => {
+          ctx.drawImage(frameImg, 0, 0, frameMapping.frameWidth, frameMapping.frameHeight);
           resolve();
         };
-        img.src = photo.dataUrl;
+        frameImg.src = frameMapping.frame;
       });
-    });
 
-    await Promise.all(photoPromises);
+      // Load and draw photos using precise frame mapping coordinates
+      const photoPromises = photos.map((photo, index) => {
+        return new Promise<void>((resolve) => {
+          if (index >= frameMapping.windows.length) {
+            resolve();
+            return;
+          }
+          
+          const window = frameMapping.windows[index];
+          const img = new Image();
+          img.onload = () => {
+            // Calculate aspect ratios for proper cropping
+            const imgAspect = img.width / img.height;
+            const windowAspect = window.width / window.height;
+            
+            let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
+            
+            // Crop image to fit window aspect ratio (center crop)
+            if (imgAspect > windowAspect) {
+              // Image is wider than window, crop sides
+              sourceWidth = img.height * windowAspect;
+              sourceX = (img.width - sourceWidth) / 2;
+            } else {
+              // Image is taller than window, crop top/bottom
+              sourceHeight = img.width / windowAspect;
+              sourceY = (img.height - sourceHeight) / 2;
+            }
+            
+            // Draw photo with proper aspect ratio preservation
+            ctx.save();
+            ctx.beginPath();
+            if (window.borderRadius) {
+              ctx.roundRect(window.left, window.top, window.width, window.height, window.borderRadius);
+            } else {
+              ctx.rect(window.left, window.top, window.width, window.height);
+            }
+            ctx.clip();
+            ctx.drawImage(
+              img,
+              sourceX, sourceY, sourceWidth, sourceHeight,
+              window.left, window.top, window.width, window.height
+            );
+            ctx.restore();
 
-    // Footer using template styling
-    ctx.fillStyle = template.styling.subtitleColor;
-    ctx.font = template.styling.subtitleFont;
-    ctx.textAlign = 'center';
-    ctx.fillText('Elegancia Nocturna', stripWidth / 2, stripHeight - 20);
+            resolve();
+          };
+          img.src = photo.dataUrl;
+        });
+      });
+
+      await Promise.all(photoPromises);
     
     } catch (error) {
       console.error('Error generating photo strip:', error);
@@ -149,9 +168,9 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
       ctx.lineWidth = 4;
       ctx.strokeRect(2, 2, stripWidth - 4, stripHeight - 4);
     }
-  };
+  }, [template, photos, canvasRef, getCanvasDimensions]);
 
-  const downloadGifStrip = async () => {
+  const downloadGifStrip = useCallback(async () => {
     if (!hasGifData) return;
     
     setIsGeneratingGif(true);
@@ -187,6 +206,7 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
         textBaseline: 'middle'
       }, (obj: any) => {
         if (!obj.error) {
+          setGeneratedGifUrl(obj.image);
           const link = document.createElement('a');
           link.download = `boothiecall-gif-${layout.id}-${Date.now()}.gif`;
           link.href = obj.image;
@@ -204,9 +224,9 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
       console.error('Error generating GIF strip:', error);
       setIsGeneratingGif(false);
     }
-  };
+  }, [hasGifData, layout.id, layout.shots, photos, setGeneratedGifUrl, setIsGeneratingGif]);
 
-  const downloadPhotoStrip = async () => {
+  const downloadPhotoStrip = useCallback(async () => {
     setIsDownloading(true);
     try {
       await generatePhotoStrip();
@@ -222,7 +242,26 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
     } finally {
       setIsDownloading(false);
     }
-  };
+  }, [generatePhotoStrip, canvasRef, layout.id, setIsDownloading]);
+
+  // Generate photo strip on component mount and save session
+  useEffect(() => {
+    const initializeSession = async () => {
+      try {
+        await generatePhotoStrip();
+        
+        if (canvasRef.current && onSessionComplete) {
+          const dataUrl = canvasRef.current.toDataURL('image/png', 0.9);
+          setFinalImageUrl(dataUrl);
+          onSessionComplete(dataUrl, generatedGifUrl || undefined);
+        }
+      } catch (error) {
+        console.error('Error initializing session:', error);
+      }
+    };
+    
+    initializeSession();
+  }, [photos, template, generatePhotoStrip, onSessionComplete, generatedGifUrl]);
 
   return (
     <div className="container-elegancia py-8 min-h-screen">
@@ -333,13 +372,25 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
                 </Button>
               )}
               
-              <Button
-                variant="outline"
-                className="w-full border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
-              >
-                <Share2 className="w-5 h-5 mr-2" />
-                Share Photo Strip
-              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => setIsShareModalOpen(true)}
+                  variant="outline"
+                  className="border-gold-400/30 text-gold-300 hover:bg-gold-400/10"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+                
+                <Button
+                  onClick={() => setIsPrintModalOpen(true)}
+                  variant="outline"
+                  className="border-purple-400/30 text-purple-300 hover:bg-purple-400/10"
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -401,6 +452,23 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack }: FinalRes
 
       {/* Hidden canvas for photo strip generation */}
       <canvas ref={canvasRef} className="hidden" />
+      
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        imageDataUrl={finalImageUrl || (canvasRef.current?.toDataURL('image/png', 0.9) || '')}
+        title={`${template.name} Photo Strip`}
+        description={`Check out my ${layout.name} photo strip created with BoothieCall!`}
+      />
+      
+      {/* Print Preview Modal */}
+      <PrintPreview
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        imageUrl={finalImageUrl || (canvasRef.current?.toDataURL('image/png', 0.9) || '')}
+        title={`${template.name} Photo Strip`}
+      />
     </div>
   );
 };
