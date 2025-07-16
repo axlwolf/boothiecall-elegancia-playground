@@ -35,7 +35,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Unauthorized - redirect to login
       localStorage.removeItem('authToken');
-      window.location.href = '/admin/login';
+      window.location.href = '/playground/admin/login';
     }
     return Promise.reject(error);
   }
