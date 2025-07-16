@@ -1,13 +1,6 @@
 {
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "dist",
   "routes": [
     {
       "src": "/playground/(.*)",
@@ -22,7 +15,6 @@
       "dest": "/index.html"
     }
   ],
-  "functions": {},
   "headers": [
     {
       "source": "/playground/assets/(.*)",
