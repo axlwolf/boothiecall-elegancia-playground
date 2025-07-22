@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import Landing from './Landing';
 import LayoutSelection from './LayoutSelection';
 import DesignSelection from './DesignSelection';
@@ -10,7 +10,7 @@ import SessionHistory from './SessionHistory';
 import { Layout, CapturedPhoto } from '@/types/layout';
 import { Template } from '@/types/templates';
 import { PhotoSession } from '@/types/session';
-import { HybridStorageService } from '@/lib/hybridStorage';
+import { usePhotoSessions, useSync } from '@/hooks/usePersistence';
 
 type Step = 'landing' | 'layout' | 'design' | 'capture' | 'filters' | 'edit' | 'result' | 'history';
 
@@ -24,7 +24,9 @@ const Photobooth = () => {
   const [finalImageUrl, setFinalImageUrl] = useState<string>('');
   const [finalGifUrl, setFinalGifUrl] = useState<string>('');
   
-  const sessionStorage = HybridStorageService.getInstance();
+  // Use new persistence hooks
+  const { saveSession, sessions, error: sessionError } = usePhotoSessions();
+  const { emitEvent, syncStatus } = useSync();
 
   const handleStart = () => {
     setSessionStartTime(Date.now());

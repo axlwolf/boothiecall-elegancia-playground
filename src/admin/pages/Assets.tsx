@@ -3,7 +3,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { DataTable } from '../components/DataTable';
-import { assetService } from '../services/assetService';
+import { usePersistenceContext } from '../providers/PersistenceProvider';
+import { AdminAsset } from '@/types/persistence';
 import { Asset } from '../types/Asset';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -12,22 +13,60 @@ import { EditAssetDialog } from '../components/EditAssetDialog';
 import { DeleteAssetDialog } from '../components/DeleteAssetDialog';
 
 const Assets: React.FC = () => {
-  const [assets, setAssets] = useState<Asset[]>([]);
+  const [assets, setAssets] = useState<AdminAsset[]>([]);
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<AdminAsset | null>(null);
 
-  const fetchAssets = useCallback(() => {
-    assetService.getAssets().then(setAssets);
-  }, []);
+  // Use persistence context
+  const { 
+    getAllEntities, 
+    saveEntity, 
+    deleteEntity, 
+    loading, 
+    errors 
+  } = usePersistenceContext();
+
+  const fetchAssets = useCallback(async () => {
+    try {
+      const fetchedAssets = await getAllEntities<AdminAsset>('assets');
+      setAssets(fetchedAssets);
+    } catch (error) {
+      console.error('Failed to fetch assets:', error);
+    }
+  }, [getAllEntities]);
 
   useEffect(() => {
     fetchAssets();
   }, [fetchAssets]);
 
-  const handleUpload = (file: File, type: Asset['type']) => {
-    assetService.addAsset(file, type).then(() => fetchAssets());
+  const handleUpload = async (file: File, type: AdminAsset['type']) => {
+    try {
+      const newAsset: AdminAsset = {
+        id: crypto.randomUUID(),
+        name: file.name,
+        type,
+        url: URL.createObjectURL(file),
+        thumbnailUrl: URL.createObjectURL(file),
+        metadata: {
+          version: 1,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          size: file.size
+        },
+        tenantId: 'default',
+        tags: [],
+        isActive: true
+      };
+      
+      const success = await saveEntity('assets', newAsset);
+      if (success) {
+        await fetchAssets();
+      }
+    } catch (error) {
+      console.error('Failed to upload asset:', error);
+    }
   };
 
   const handleUpdate = (id: string, data: Partial<Pick<Asset, 'fileName' | 'type'>>) => {
