@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
+import { PersistenceProvider } from '../providers/PersistenceProvider';
 
 const AdminLayout: React.FC = () => {
   const auth = useAuth();
@@ -56,7 +57,9 @@ const AdminLayout: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
-          <Outlet />
+          <PersistenceProvider>
+            <Outlet />
+          </PersistenceProvider>
         </main>
       </div>
     </div>

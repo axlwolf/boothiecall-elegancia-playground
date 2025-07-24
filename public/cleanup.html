@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Cleanup - BoothieCall</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #fff;
+        }
+        .cleanup-container {
+            text-align: center;
+            padding: 40px;
+            border: 2px solid #D8AE48;
+            border-radius: 10px;
+            background: #1a1a1a;
+        }
+        button {
+            background: #D8AE48;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #B8941F;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: #2d5a2d; }
+        .error { background: #5a2d2d; }
+        .info { background: #2d4a5a; }
+    </style>
+</head>
+<body>
+    <div class="cleanup-container">
+        <h1>🧹 PWA Cleanup Tool</h1>
+        <p>This tool will clean up service workers and caches that might be causing issues in development.</p>
+        
+        <div id="status" class="status info">
+            Ready to clean up PWA data
+        </div>
+        
+        <button onclick="cleanupPWA()">Clean Up Service Worker & Caches</button>
+        <button onclick="window.location.href='/'">Back to App</button>
+        
+        <div style="margin-top: 30px; font-size: 14px; color: #888;">
+            <p><strong>What this does:</strong></p>
+            <ul style="text-align: left; display: inline-block;">
+                <li>Unregisters all service workers</li>
+                <li>Clears all browser caches</li>
+                <li>Removes PWA installation data</li>
+                <li>Forces a clean reload</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        async function unregisterServiceWorkers() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    
+                    if (registrations.length === 0) {
+                        updateStatus('No service workers found', 'info');
+                        return;
+                    }
+                    
+                    for (const registration of registrations) {
+                        console.log('Unregistering service worker:', registration.scope);
+                        await registration.unregister();
+                    }
+                    
+                    updateStatus(`Unregistered ${registrations.length} service worker(s)`, 'success');
+                } catch (error) {
+                    console.error('Error unregistering service workers:', error);
+                    updateStatus('Error unregistering service workers: ' + error.message, 'error');
+                }
+            } else {
+                updateStatus('Service workers not supported', 'info');
+            }
+        }
+
+        async function clearCaches() {
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    
+                    if (cacheNames.length === 0) {
+                        updateStatus('No caches found', 'info');
+                        return;
+                    }
+                    
+                    for (const cacheName of cacheNames) {
+                        console.log('Deleting cache:', cacheName);
+                        await caches.delete(cacheName);
+                    }
+                    
+                    updateStatus(`Cleared ${cacheNames.length} cache(s)`, 'success');
+                } catch (error) {
+                    console.error('Error clearing caches:', error);
+                    updateStatus('Error clearing caches: ' + error.message, 'error');
+                }
+            } else {
+                updateStatus('Cache API not supported', 'info');
+            }
+        }
+
+        async function cleanupPWA() {
+            try {
+                updateStatus('Starting cleanup...', 'info');
+                
+                await unregisterServiceWorkers();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                await clearCaches();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                updateStatus('Cleanup complete! Reloading in 3 seconds...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Cleanup error:', error);
+                updateStatus('Cleanup failed: ' + error.message, 'error');
+            }
+        }
+
+        // Enhanced auto-detection
+        window.addEventListener('load', async () => {
+            await performAutoDetection();
+        });
+        
+        async function performAutoDetection() {
+            updateStatus('🔍 Scanning for PWA components...', 'info');
+            
+            let issues = [];
+            let totalItems = 0;
+            
+            // Check service workers
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    totalItems += registrations.length;
+                    
+                    if (registrations.length > 0) {
+                        issues.push(`${registrations.length} service worker(s)`);
+                        
+                        // Check for problematic workers
+                        for (const reg of registrations) {
+                            if (reg.active) {
+                                const url = reg.active.scriptURL;
+                                if (url.includes('localhost') || url.includes('127.0.0.1')) {
+                                    issues.push('Development service worker detected');
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    issues.push('Service worker check failed: ' + error.message);
+                }
+            }
+            
+            // Check caches
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    totalItems += cacheNames.length;
+                    
+                    if (cacheNames.length > 0) {
+                        issues.push(`${cacheNames.length} cache(s)`);
+                    }
+                } catch (error) {
+                    issues.push('Cache check failed: ' + error.message);
+                }
+            }
+            
+            // Check localStorage for PWA-related items
+            let pwaLocalStorageItems = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('pwa') || key.includes('sw') || key.includes('cache'))) {
+                    pwaLocalStorageItems++;
+                }
+            }
+            
+            if (pwaLocalStorageItems > 0) {
+                issues.push(`${pwaLocalStorageItems} PWA localStorage item(s)`);
+                totalItems += pwaLocalStorageItems;
+            }
+            
+            // Display results
+            if (issues.length > 0) {
+                updateStatus(`⚠️ Found items that may need cleanup:\n• ${issues.join('\n• ')}\n\nTotal items: ${totalItems}`, 'info');
+            } else {
+                updateStatus('✅ No PWA components found - cleanup not needed', 'success');
+            }
+        }
+    </script>
+</body>
+</html>

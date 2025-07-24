@@ -1,0 +1,34 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0a0a0a"/>
+  
+  <!-- Gold accent circle -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#D8AE48" stroke-width="8"/>
+  
+  <!-- Camera icon -->
+  <g transform="translate(256, 256)">
+    <!-- Camera body -->
+    <rect x="-80" y="-40" width="160" height="80" rx="12" fill="#D8AE48"/>
+    
+    <!-- Lens -->
+    <circle cx="0" cy="0" r="50" fill="#0a0a0a"/>
+    <circle cx="0" cy="0" r="35" fill="none" stroke="#D8AE48" stroke-width="4"/>
+    <circle cx="0" cy="0" r="20" fill="none" stroke="#D8AE48" stroke-width="2"/>
+    
+    <!-- Flash -->
+    <rect x="40" y="-50" width="20" height="15" rx="3" fill="#D8AE48"/>
+    
+    <!-- Viewfinder -->
+    <rect x="-20" y="-50" width="30" height="15" rx="3" fill="#333"/>
+  </g>
+  
+  <!-- Elegant text -->
+  <text x="256" y="420" text-anchor="middle" font-family="serif" font-size="32" font-weight="bold" fill="#D8AE48">
+    BoothieCall
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="256" y="450" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#888">
+    Elegancia
+  </text>
+</svg>
