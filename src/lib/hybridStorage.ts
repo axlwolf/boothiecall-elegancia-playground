@@ -1,4 +1,6 @@
 import { PhotoSession, SessionSummary, SessionStats } from '@/types/session';
+import { SyncService } from './syncService';
+import { StorageMetadata, PersistenceError } from '@/types/persistence';
 
 const STORAGE_KEY = 'boothie-call-sessions';
 const DB_NAME = 'BoothieCallDB';
@@ -181,9 +183,13 @@ export class HybridStorageService {
   private static instance: HybridStorageService;
   private adapter: StorageAdapter;
   private usingIndexedDB = false;
+  private syncService: SyncService;
+  private enableSync: boolean = true;
 
   private constructor() {
     this.adapter = new LocalStorageAdapter();
+    this.syncService = SyncService.getInstance();
+    this.initializeSyncListeners();
   }
 
   static getInstance(): HybridStorageService {
@@ -191,6 +197,24 @@ export class HybridStorageService {
       HybridStorageService.instance = new HybridStorageService();
     }
     return HybridStorageService.instance;
+  }
+
+  private initializeSyncListeners(): void {
+    // Subscribe to session sync events from admin or other instances
+    this.syncService.subscribe('session', (event) => {
+      if (event.source !== 'main') {
+        console.log('Received session sync event:', event);
+        // Handle incoming sync events if needed
+      }
+    });
+  }
+
+  public setSyncEnabled(enabled: boolean): void {
+    this.enableSync = enabled;
+  }
+
+  public isSyncEnabled(): boolean {
+    return this.enableSync;
   }
 
   private async switchToIndexedDB(): Promise<void> {
@@ -222,13 +246,51 @@ export class HybridStorageService {
 
   async saveSession(session: PhotoSession): Promise<void> {
     try {
-      await this.adapter.saveSession(session);
+      // Enhance existing metadata with persistence fields
+      const sessionWithMetadata = {
+        ...session,
+        metadata: {
+          ...session.metadata,
+          // Add StorageMetadata fields
+          version: 1,
+          createdAt: session.createdAt,
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      await this.adapter.saveSession(sessionWithMetadata);
+      
+      // Emit sync event if sync is enabled
+      if (this.enableSync) {
+        await this.syncService.emitEvent(
+          'create',
+          'session',
+          session.id,
+          sessionWithMetadata,
+          'main'
+        );
+      }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         await this.switchToIndexedDB();
         await this.adapter.saveSession(session);
+        
+        // Emit sync event after successful save
+        if (this.enableSync) {
+          await this.syncService.emitEvent(
+            'create',
+            'session',
+            session.id,
+            session,
+            'main'
+          );
+        }
       } else {
-        throw error;
+        throw new PersistenceError(
+          'Failed to save session',
+          'SESSION_SAVE_ERROR',
+          error
+        );
       }
     }
   }

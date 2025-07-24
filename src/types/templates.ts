@@ -10,6 +10,9 @@ export interface TemplateAssets {
   backgroundImage?: string;
   overlayImage?: string;
   previewImage: string;
+  background?: string;
+  overlay?: string;
+  logo?: string;
 }
 
 export interface TemplateStyling {
@@ -27,7 +30,7 @@ export interface Template {
   name: string;
   layoutType: string;
   description: string;
-  frameMapping: FrameCoordinates[];
+  frameMapping: FrameMapping[];
   styling: TemplateStyling;
   assets: TemplateAssets;
   isActive: boolean;

@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { HybridStorageService } from '@/lib/hybridStorage';
+import { usePhotoSessions, useSync } from '@/hooks/usePersistence';
 import { PhotoSession, SessionSummary, SessionStats } from '@/types/session';
 
 interface SessionHistoryProps {
@@ -27,18 +27,40 @@ interface SessionHistoryProps {
 }
 
 const SessionHistory: React.FC<SessionHistoryProps> = ({ onClose, onReplaySession }) => {
-  const [sessions, setSessions] = useState<SessionSummary[]>([]);
-  const [stats, setStats] = useState<SessionStats | null>(null);
   const [selectedSession, setSelectedSession] = useState<PhotoSession | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('history');
+  const [stats, setStats] = useState<SessionStats | null>(null);
   
-  const sessionStorage = HybridStorageService.getInstance();
+  // Use new persistence hooks
+  const { 
+    sessions, 
+    loading, 
+    error, 
+    deleteSession, 
+    clearAllSessions, 
+    refreshSessions 
+  } = usePhotoSessions();
+  const { syncStatus, emitEvent } = useSync();
+
+  const getSessionStats = useCallback(async () => {
+    try {
+      const stats = await sessionStorage.getStats();
+      setStats(stats);
+    } catch (error) {
+      console.error('Failed to load session stats:', error);
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
-    setSessions(await sessionStorage.getSessionSummaries());
-    setStats(await sessionStorage.getSessionStats());
-  }, [sessionStorage]);
+    try {
+      const sessions = await sessionStorage.getAllSessions();
+      setSessions(sessions);
+      await getSessionStats();
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
+    }
+  }, [getSessionStats]);
 
   useEffect(() => {
     loadData();
@@ -50,18 +72,25 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ onClose, onReplaySessio
       setSelectedSession(session);
       setIsViewDialogOpen(true);
     }
-  }, [sessionStorage]);
+  }, []);
 
   const handleDeleteSession = useCallback(async (sessionId: string) => {
-    if (await sessionStorage.deleteSession(sessionId)) {
+    try {
+      await sessionStorage.deleteSession(sessionId);
       await loadData();
+    } catch (error) {
+      console.error('Failed to delete session:', error);
     }
-  }, [sessionStorage, loadData]);
+  }, [loadData]);
 
   const handleClearAll = useCallback(async () => {
     if (confirm('Are you sure you want to delete all photo sessions? This action cannot be undone.')) {
-      await sessionStorage.clearAllSessions();
-      await loadData();
+      try {
+        await sessionStorage.clearAllSessions();
+        await loadData();
+      } catch (error) {
+        console.error('Failed to clear sessions:', error);
+      }
     }
   }, [sessionStorage, loadData]);
 

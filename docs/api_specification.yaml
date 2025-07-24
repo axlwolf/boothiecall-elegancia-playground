@@ -1,0 +1,1011 @@
+openapi: 3.0.3
+info:
+  title: BoothieCall Elegancia API
+  description: |
+    RESTful API for BoothieCall Elegancia Playground - a sophisticated photobooth application.
+    
+    ## Features
+    - Multi-tenant architecture
+    - Role-based access control
+    - Asset management with versioning
+    - Photo session processing
+    - Real-time analytics
+    - File upload and storage
+    
+    ## Authentication
+    This API uses JWT Bearer tokens for authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your-jwt-token>
+    ```
+  version: 1.0.0
+  contact:
+    name: BoothieCall Support
+    url: https://boothiecall.net
+    email: support@boothiecall.net
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+  - url: https://api.boothiecall.net/api
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication Endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: admin@boothiecall.net
+              password: securepassword123
+              tenant: elegancia-demo
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get new access token using refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate refresh token and logout user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Asset Management Endpoints
+  /assets:
+    get:
+      tags:
+        - Assets
+      summary: List assets
+      description: Get paginated list of assets with filtering options
+      parameters:
+        - name: type
+          in: query
+          description: Filter by asset type
+          schema:
+            $ref: '#/components/schemas/AssetType'
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search in asset names
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Assets retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetListResponse'
+
+    post:
+      tags:
+        - Assets
+      summary: Create new asset
+      description: Upload and create a new asset
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAssetRequest'
+      responses:
+        '201':
+          description: Asset created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /assets/{id}:
+    get:
+      tags:
+        - Assets
+      summary: Get asset by ID
+      description: Retrieve a specific asset by its ID
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        '200':
+          description: Asset retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Assets
+      summary: Update asset
+      description: Update asset metadata and optionally replace file
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateAssetRequest'
+      responses:
+        '200':
+          description: Asset updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Assets
+      summary: Delete asset
+      description: Soft delete an asset (mark as inactive)
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        '200':
+          description: Asset deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /assets/{id}/versions:
+    get:
+      tags:
+        - Assets
+      summary: Get asset versions
+      description: Get all versions of an asset for rollback purposes
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        '200':
+          description: Asset versions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetVersionsResponse'
+
+  /assets/{id}/rollback/{version}:
+    post:
+      tags:
+        - Assets
+      summary: Rollback asset version
+      description: Rollback asset to a previous version
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+        - name: version
+          in: path
+          required: true
+          description: Version number to rollback to
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Asset rolled back successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Photo Session Endpoints
+  /sessions:
+    post:
+      tags:
+        - Photo Sessions
+      summary: Create photo session
+      description: Create a new photo session for the photobooth
+      security: []  # Public endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSessionResponse'
+
+  /sessions/{id}:
+    get:
+      tags:
+        - Photo Sessions
+      summary: Get session details
+      description: Retrieve photo session details
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Session retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoSession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sessions/{id}/photos:
+    put:
+      tags:
+        - Photo Sessions
+      summary: Update session photos
+      description: Upload and update photos for a session
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdatePhotosRequest'
+      responses:
+        '200':
+          description: Photos updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoSession'
+
+  /sessions/{id}/generate:
+    post:
+      tags:
+        - Photo Sessions
+      summary: Generate final output
+      description: Process photos and generate final PNG/GIF output
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateOutputRequest'
+      responses:
+        '200':
+          description: Output generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateOutputResponse'
+        '202':
+          description: Generation in progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingResponse'
+
+  # Analytics Endpoints
+  /analytics/dashboard:
+    get:
+      tags:
+        - Analytics
+      summary: Get dashboard analytics
+      description: Retrieve analytics data for admin dashboard
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date for analytics (ISO 8601)
+          schema:
+            type: string
+            format: date
+        - name: tenant
+          in: query
+          description: Filter by tenant (super admin only)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analytics data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsDashboardResponse'
+
+  /analytics/events:
+    post:
+      tags:
+        - Analytics
+      summary: Track analytics event
+      description: Record an analytics event
+      security: []  # Public endpoint for frontend tracking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackEventRequest'
+      responses:
+        '201':
+          description: Event tracked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    AssetId:
+      name: id
+      in: path
+      required: true
+      description: Asset UUID
+      schema:
+        type: string
+        format: uuid
+
+    SessionId:
+      name: id
+      in: path
+      required: true
+      description: Session UUID
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # Authentication Schemas
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@boothiecall.net
+        password:
+          type: string
+          minLength: 8
+          example: securepassword123
+        tenant:
+          type: string
+          description: Tenant slug for multi-tenant login
+          example: elegancia-demo
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: JWT refresh token
+        expiresIn:
+          type: integer
+          description: Access token expiry in seconds
+          example: 900
+
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    LogoutRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        expiresIn:
+          type: integer
+          example: 900
+
+    # User Schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        tenantId:
+          type: string
+          format: uuid
+        avatarUrl:
+          type: string
+          format: uri
+        isActive:
+          type: boolean
+        lastLoginAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    UserRole:
+      type: string
+      enum:
+        - super_admin
+        - tenant_admin
+        - editor
+        - viewer
+
+    # Asset Schemas
+    AssetType:
+      type: string
+      enum:
+        - template
+        - filter
+        - font
+        - image
+        - icon
+
+    Asset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/AssetType'
+        category:
+          type: string
+        filePath:
+          type: string
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        version:
+          type: integer
+        isActive:
+          type: boolean
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateAssetRequest:
+      type: object
+      required:
+        - name
+        - type
+        - file
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        type:
+          $ref: '#/components/schemas/AssetType'
+        category:
+          type: string
+          maxLength: 100
+        file:
+          type: string
+          format: binary
+        metadata:
+          type: object
+          additionalProperties: true
+
+    UpdateAssetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        category:
+          type: string
+          maxLength: 100
+        file:
+          type: string
+          format: binary
+        metadata:
+          type: object
+          additionalProperties: true
+
+    AssetListResponse:
+      type: object
+      properties:
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    AssetVersionsResponse:
+      type: object
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetVersion'
+        current:
+          type: integer
+
+    AssetVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        filePath:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    # Photo Session Schemas
+    LayoutType:
+      type: string
+      enum:
+        - 1shot
+        - 3shot
+        - 4shot
+        - 6shot
+
+    CreateSessionRequest:
+      type: object
+      required:
+        - layoutType
+      properties:
+        layoutType:
+          $ref: '#/components/schemas/LayoutType'
+        templateId:
+          type: string
+          format: uuid
+
+    CreateSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        sessionToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    PhotoSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        sessionToken:
+          type: string
+        layoutType:
+          $ref: '#/components/schemas/LayoutType'
+        templateId:
+          type: string
+          format: uuid
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhotoData'
+        filtersApplied:
+          type: object
+          additionalProperties: true
+        finalOutputUrl:
+          type: string
+          format: uri
+        gifOutputUrl:
+          type: string
+          format: uri
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+
+    PhotoData:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        filter:
+          type: string
+        position:
+          type: integer
+        metadata:
+          type: object
+          additionalProperties: true
+
+    UpdatePhotosRequest:
+      type: object
+      properties:
+        photos:
+          type: array
+          items:
+            type: string
+            format: binary
+        filters:
+          type: object
+          additionalProperties:
+            type: string
+
+    GenerateOutputRequest:
+      type: object
+      required:
+        - format
+      properties:
+        format:
+          type: string
+          enum:
+            - png
+            - gif
+            - both
+        quality:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 90
+
+    GenerateOutputResponse:
+      type: object
+      properties:
+        pngUrl:
+          type: string
+          format: uri
+        gifUrl:
+          type: string
+          format: uri
+        downloadUrls:
+          type: object
+          properties:
+            png:
+              type: string
+              format: uri
+            gif:
+              type: string
+              format: uri
+
+    ProcessingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: processing
+        estimatedTime:
+          type: integer
+          description: Estimated processing time in seconds
+        jobId:
+          type: string
+          format: uuid
+
+    # Analytics Schemas
+    AnalyticsDashboardResponse:
+      type: object
+      properties:
+        totalSessions:
+          type: integer
+        totalPhotos:
+          type: integer
+        popularLayouts:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutStats'
+        popularFilters:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterStats'
+        dailyStats:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyStats'
+        realtimeStats:
+          $ref: '#/components/schemas/RealtimeStats'
+
+    LayoutStats:
+      type: object
+      properties:
+        layout:
+          $ref: '#/components/schemas/LayoutType'
+        count:
+          type: integer
+        percentage:
+          type: number
+          format: float
+
+    FilterStats:
+      type: object
+      properties:
+        filter:
+          type: string
+        count:
+          type: integer
+        percentage:
+          type: number
+          format: float
+
+    DailyStats:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        sessions:
+          type: integer
+        photos:
+          type: integer
+
+    RealtimeStats:
+      type: object
+      properties:
+        activeSessions:
+          type: integer
+        sessionsToday:
+          type: integer
+        photosToday:
+          type: integer
+
+    TrackEventRequest:
+      type: object
+      required:
+        - eventType
+      properties:
+        eventType:
+          type: string
+          example: session_started
+        eventData:
+          type: object
+          additionalProperties: true
+        sessionId:
+          type: string
+          format: uuid
+
+    # Common Schemas
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation completed successfully
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: VALIDATION_ERROR
+            message: Invalid request data
+            details:
+              field: email
+              reason: Invalid email format
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: UNAUTHORIZED
+            message: Invalid or expired token
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: FORBIDDEN
+            message: Insufficient permissions for this operation
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: NOT_FOUND
+            message: Resource not found
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: INTERNAL_ERROR
+            message: An unexpected error occurred
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Assets
+    description: Asset management with versioning
+  - name: Photo Sessions
+    description: Photo session management and processing
+  - name: Analytics
+    description: Analytics and reporting

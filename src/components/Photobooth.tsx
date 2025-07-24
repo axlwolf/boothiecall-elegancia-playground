@@ -1,16 +1,26 @@
-import { useState, useRef } from 'react';
+import { useState, useCallback, useEffect, Suspense, lazy } from 'react';
 import Landing from './Landing';
 import LayoutSelection from './LayoutSelection';
 import DesignSelection from './DesignSelection';
 import CameraCapture from './CameraCapture';
 import FilterSelection from './FilterSelection';
-import PhotoEditor from './PhotoEditor';
 import FinalResult from './FinalResult';
 import SessionHistory from './SessionHistory';
 import { Layout, CapturedPhoto } from '@/types/layout';
 import { Template } from '@/types/templates';
 import { PhotoSession } from '@/types/session';
-import { HybridStorageService } from '@/lib/hybridStorage';
+import { usePhotoSessions, useSync } from '@/hooks/usePersistence';
+import { 
+  usePerformanceMonitoring, 
+  useImageCompression, 
+  useLazyLoading,
+  useRenderPerformance,
+  useDebouncedOptimization
+} from '@/hooks/usePerformance';
+import { Loader2 } from 'lucide-react';
+
+// Lazy load PhotoEditor for better performance
+const PhotoEditor = lazy(() => import('./PhotoEditor'));
 
 type Step = 'landing' | 'layout' | 'design' | 'capture' | 'filters' | 'edit' | 'result' | 'history';
 
@@ -24,7 +34,27 @@ const Photobooth = () => {
   const [finalImageUrl, setFinalImageUrl] = useState<string>('');
   const [finalGifUrl, setFinalGifUrl] = useState<string>('');
   
-  const sessionStorage = HybridStorageService.getInstance();
+  // Use new persistence hooks
+  const { saveSession, sessions, error: sessionError } = usePhotoSessions();
+  const { emitEvent, syncStatus } = useSync();
+  
+  // Performance optimization hooks
+  const { metrics, optimizePage, trackMemoryUsage } = usePerformanceMonitoring();
+  const { compressImage, compressMultiple, isCompressing } = useImageCompression();
+  const { preloadByPriority } = useLazyLoading();
+  const { renderTime } = useRenderPerformance('Photobooth');
+  const { scheduleOptimization } = useDebouncedOptimization();
+  
+  // Track component in memory
+  useEffect(() => {
+    trackMemoryUsage('photobooth-component', { step, capturedPhotos });
+  }, [step, capturedPhotos, trackMemoryUsage]);
+  
+  // Preload critical assets on mount
+  useEffect(() => {
+    preloadByPriority('critical');
+    scheduleOptimization();
+  }, [preloadByPriority, scheduleOptimization]);
 
   const handleStart = () => {
     setSessionStartTime(Date.now());
@@ -120,7 +150,7 @@ const Photobooth = () => {
       name: session.template.name,
       layout: session.layout,
       frameMapping: [],
-      assets: { background: '', overlay: '', logo: '' },
+      assets: { background: '', overlay: '', logo: '', previewImage: '' },
       description: ''
     });
     
@@ -231,11 +261,20 @@ const Photobooth = () => {
     
     case 'edit':
       return editingPhotoIndex !== null && capturedPhotos[editingPhotoIndex] ? (
-        <PhotoEditor
-          photo={capturedPhotos[editingPhotoIndex]}
-          onSave={handlePhotoEdited}
-          onCancel={handleCancelPhotoEdit}
-        />
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen bg-gray-900">
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-gold" />
+              <p className="text-white">Loading Photo Editor...</p>
+            </div>
+          </div>
+        }>
+          <PhotoEditor
+            photo={capturedPhotos[editingPhotoIndex]}
+            onSave={handlePhotoEdited}
+            onCancel={handleCancelPhotoEdit}
+          />
+        </Suspense>
       ) : null;
     
     case 'result':
