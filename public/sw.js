@@ -12,7 +12,7 @@ const isDevelopment = (() => {
   
   // Development indicators
   const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-  const isDevPort = port === '5173' || port === '3000' || port === '8080';
+  const isDevPort = port === '5173' || port === '3000' || port === '8080' || port === '8081';
   const isFileProtocol = protocol === 'file:';
   const hasDevQuery = location.search.includes('dev=true');
   

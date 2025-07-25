@@ -173,8 +173,8 @@ export class SyncService {
         localStorage.removeItem('boothie-sync-broadcast');
       }
 
-      // Log the event for debugging
-      console.log(`Sync event broadcasted:`, event);
+      // Log the event for debugging (disabled to prevent spam)
+      // console.log(`Sync event broadcasted:`, event);
     } catch (error) {
       console.error('Failed to broadcast sync event:', error);
       

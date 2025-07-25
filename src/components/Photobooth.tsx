@@ -132,7 +132,7 @@ const Photobooth = () => {
       }
     };
 
-    await sessionStorage.saveSession(session);
+    await saveSession(session);
   };
 
   const handleReplaySession = (session: PhotoSession) => {
@@ -148,10 +148,24 @@ const Photobooth = () => {
     setSelectedTemplate({
       id: session.template.id,
       name: session.template.name,
-      layout: session.layout,
+      layoutType: session.layout.name,
       frameMapping: [],
-      assets: { background: '', overlay: '', logo: '', previewImage: '' },
-      description: ''
+      styling: {
+        backgroundColor: '#000000',
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        titleColor: '#ffffff',
+        subtitleColor: '#cccccc',
+        titleFont: 'Arial',
+        subtitleFont: 'Arial'
+      },
+      assets: {
+        previewImage: session.template.assets?.background || '',
+        background: session.template.assets?.background,
+        overlay: session.template.assets?.frames?.[0]
+      },
+      description: '',
+      isActive: true
     });
     
     setSessionStartTime(Date.now());

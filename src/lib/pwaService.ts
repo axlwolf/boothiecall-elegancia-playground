@@ -128,8 +128,12 @@ export class PWAService {
    */
   private async registerServiceWorker(): Promise<void> {
     try {
-      this.registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
+      // Get base path from document base or default to /playground/
+      const basePath = document.querySelector('base')?.getAttribute('href') || '/playground/';
+      const swPath = basePath + 'sw.js';
+      
+      this.registration = await navigator.serviceWorker.register(swPath, {
+        scope: basePath
       });
 
       console.log('Service Worker registered successfully:', this.registration);
