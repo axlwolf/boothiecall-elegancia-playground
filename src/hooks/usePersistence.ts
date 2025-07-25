@@ -88,26 +88,30 @@ export function usePhotoSessions() {
   const saveSession = useCallback(async (session: PhotoSession) => {
     try {
       await storageService.current.saveSession(session);
-      await loadSessions(); // Refresh the list
+      // Refresh the list without causing circular dependency
+      const allSessions = await storageService.current.getAllSessions();
+      setSessions(allSessions);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save session');
       return false;
     }
-  }, [loadSessions]);
+  }, []);
 
   const deleteSession = useCallback(async (sessionId: string) => {
     try {
       const success = await storageService.current.deleteSession(sessionId);
       if (success) {
-        await loadSessions(); // Refresh the list
+        // Refresh the list without causing circular dependency
+        const allSessions = await storageService.current.getAllSessions();
+        setSessions(allSessions);
       }
       return success;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete session');
       return false;
     }
-  }, [loadSessions]);
+  }, []);
 
   const clearAllSessions = useCallback(async () => {
     try {

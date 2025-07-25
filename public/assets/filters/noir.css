@@ -1,0 +1,8 @@
+/* Noir Filter CSS */
+.filter-noir {
+  filter: grayscale(100%) contrast(1.2) brightness(0.9);
+}
+
+.filter-noir img {
+  filter: grayscale(100%) contrast(1.2) brightness(0.9);
+}

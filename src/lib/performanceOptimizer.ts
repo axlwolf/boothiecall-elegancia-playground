@@ -40,7 +40,7 @@ export class PerformanceOptimizer {
     enableMinification: true,
     enableGzipCompression: true,
     maxBundleSize: 1024, // 1MB
-    maxMemoryUsage: 100, // 100MB
+    maxMemoryUsage: 500, // 500MB (increased to prevent frequent warnings)
     enableMemoryProfiling: true,
     enablePerformanceMonitoring: true
   };
@@ -267,8 +267,8 @@ export class PerformanceOptimizer {
       }
     };
 
-    // Update memory metrics every 5 seconds
-    setInterval(updateMemoryMetrics, 5000);
+    // Update memory metrics every 30 seconds (reduced frequency to prevent crashes)
+    setInterval(updateMemoryMetrics, 30000);
     updateMemoryMetrics(); // Initial update
   }
 
@@ -459,11 +459,14 @@ export class PerformanceOptimizer {
    * Preload critical resources
    */
   private async preloadCriticalResources(): Promise<void> {
+    // Get base path from document base or default to /playground/
+    const basePath = document.querySelector('base')?.getAttribute('href') || '/playground/';
+    
     const criticalResources = [
-      '/assets/templates/1shot-template.png',
-      '/assets/templates/3shot-template.png',
-      '/assets/filters/noir.css',
-      '/assets/fonts/cinzel.woff2'
+      basePath + 'assets/templates/1shot-template.png',
+      basePath + 'assets/templates/3shot-template.png',
+      basePath + 'assets/filters/noir.css',
+      basePath + 'assets/fonts/cinzel.woff2'
     ];
 
     const preloadPromises = criticalResources.map(resource => {

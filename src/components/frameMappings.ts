@@ -7,10 +7,16 @@ interface FrameMappingData {
   windows: FrameWindow[];
 }
 
+// Helper function to get base path for assets
+const getAssetPath = (path: string): string => {
+  // Always use /playground/ for consistency in this environment
+  return '/playground/' + path.replace(/^\//, '');
+};
+
 const frameMappings: { [key: string]: FrameMappingData } = {
   // 1-shot designs
   '1shot-design1': {
-    frame: '/designs/1shot-design1.png',
+    frame: getAssetPath('designs/1shot-design1.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -18,7 +24,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design2': {
-    frame: '/designs/1shot-design2.png',
+    frame: getAssetPath('designs/1shot-design2.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -26,7 +32,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design3': {
-    frame: '/designs/1shot-design3.png',
+    frame: getAssetPath('designs/1shot-design3.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -34,7 +40,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design4': {
-    frame: '/designs/1shot-design4.png',
+    frame: getAssetPath('designs/1shot-design4.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -42,7 +48,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design5': {
-    frame: '/designs/1shot-design5.png',
+    frame: getAssetPath('designs/1shot-design5.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -50,7 +56,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design6': {
-    frame: '/designs/1shot-design6.png',
+    frame: getAssetPath('designs/1shot-design6.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -58,7 +64,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design7': {
-    frame: '/designs/1shot-design7.png',
+    frame: getAssetPath('designs/1shot-design7.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -66,7 +72,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design8': {
-    frame: '/designs/1shot-design8.png',
+    frame: getAssetPath('designs/1shot-design8.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -74,7 +80,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design9': {
-    frame: '/designs/1shot-design9.png',
+    frame: getAssetPath('designs/1shot-design9.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -82,7 +88,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '1shot-design10': {
-    frame: '/designs/1shot-design10.png',
+    frame: getAssetPath('designs/1shot-design10.png'),
     frameWidth: 400,
     frameHeight: 600,
     windows: [
@@ -92,7 +98,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
 
   // 3-shot designs
   '3shot-design1': {
-    frame: '/designs/3shot-design1.png',
+    frame: getAssetPath('designs/3shot-design1.png'),
     frameWidth: 400,
     frameHeight: 650,
     windows: [
@@ -102,7 +108,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '3shot-design2': {
-    frame: '/designs/3shot-design2.png',
+    frame: getAssetPath('designs/3shot-design2.png'),
     frameWidth: 400,
     frameHeight: 650,
     windows: [
@@ -112,7 +118,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '3shot-design3': {
-    frame: '/designs/3shot-design3.png',
+    frame: getAssetPath('designs/3shot-design3.png'),
     frameWidth: 400,
     frameHeight: 650,
     windows: [
@@ -122,7 +128,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '3shot-design4': {
-    frame: '/designs/3shot-design4.png',
+    frame: getAssetPath('designs/3shot-design4.png'),
     frameWidth: 400,
     frameHeight: 650,
     windows: [
@@ -132,7 +138,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '3shot-design5': {
-    frame: '/designs/3shot-design5.png',
+    frame: getAssetPath('designs/3shot-design5.png'),
     frameWidth: 400,
     frameHeight: 650,
     windows: [
@@ -144,7 +150,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
 
   // 4-shot designs
   '4shot-design1': {
-    frame: '/designs/4shot-design1.png',
+    frame: getAssetPath('designs/4shot-design1.png'),
     frameWidth: 400,
     frameHeight: 700,
     windows: [
@@ -155,7 +161,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '4shot-design2': {
-    frame: '/designs/4shot-design2.png',
+    frame: getAssetPath('designs/4shot-design2.png'),
     frameWidth: 400,
     frameHeight: 700,
     windows: [
@@ -166,7 +172,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '4shot-design3': {
-    frame: '/designs/4shot-design3.png',
+    frame: getAssetPath('designs/4shot-design3.png'),
     frameWidth: 400,
     frameHeight: 700,
     windows: [
@@ -177,7 +183,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '4shot-design4': {
-    frame: '/designs/4shot-design4.png',
+    frame: getAssetPath('designs/4shot-design4.png'),
     frameWidth: 400,
     frameHeight: 700,
     windows: [
@@ -188,7 +194,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '4shot-design5': {
-    frame: '/designs/4shot-design5.png',
+    frame: getAssetPath('designs/4shot-design5.png'),
     frameWidth: 400,
     frameHeight: 700,
     windows: [
@@ -201,7 +207,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
 
   // 6-shot designs
   '6shot-design1': {
-    frame: '/designs/6shot-design1.png',
+    frame: getAssetPath('designs/6shot-design1.png'),
     frameWidth: 400,
     frameHeight: 500,
     windows: [
@@ -214,7 +220,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '6shot-design2': {
-    frame: '/designs/6shot-design2.png',
+    frame: getAssetPath('designs/6shot-design2.png'),
     frameWidth: 400,
     frameHeight: 500,
     windows: [
@@ -227,7 +233,7 @@ const frameMappings: { [key: string]: FrameMappingData } = {
     ],
   },
   '6shot-design3': {
-    frame: '/designs/6shot-design3.png',
+    frame: getAssetPath('designs/6shot-design3.png'),
     frameWidth: 400,
     frameHeight: 500,
     windows: [

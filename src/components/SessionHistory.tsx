@@ -32,67 +32,53 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ onClose, onReplaySessio
   const [activeTab, setActiveTab] = useState('history');
   const [stats, setStats] = useState<SessionStats | null>(null);
   
-  // Use new persistence hooks
-  const { 
-    sessions, 
-    loading, 
-    error, 
-    deleteSession, 
-    clearAllSessions, 
-    refreshSessions 
-  } = usePhotoSessions();
-  const { syncStatus, emitEvent } = useSync();
+  // Use persistence hooks
+  const { sessions, loading, error, refreshSessions, deleteSession: removeSession, getSessionStats: getStats } = usePhotoSessions();
+  const { syncStatus } = useSync();
 
   const getSessionStats = useCallback(async () => {
     try {
-      const stats = await sessionStorage.getStats();
+      const stats = await getStats();
       setStats(stats);
     } catch (error) {
       console.error('Failed to load session stats:', error);
     }
-  }, []);
-
-  const loadData = useCallback(async () => {
-    try {
-      const sessions = await sessionStorage.getAllSessions();
-      setSessions(sessions);
-      await getSessionStats();
-    } catch (error) {
-      console.error('Failed to load sessions:', error);
-    }
-  }, [getSessionStats]);
+  }, [getStats]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    getSessionStats();
+  }, [getSessionStats]);
 
-  const handleViewSession = useCallback(async (sessionId: string) => {
-    const session = await sessionStorage.getSession(sessionId);
+  const handleViewSession = useCallback((sessionId: string) => {
+    const session = sessions.find(s => s.id === sessionId);
     if (session) {
       setSelectedSession(session);
       setIsViewDialogOpen(true);
     }
-  }, []);
+  }, [sessions]);
 
   const handleDeleteSession = useCallback(async (sessionId: string) => {
     try {
-      await sessionStorage.deleteSession(sessionId);
-      await loadData();
+      await removeSession(sessionId);
+      await refreshSessions();
     } catch (error) {
       console.error('Failed to delete session:', error);
     }
-  }, [loadData]);
+  }, [removeSession, refreshSessions]);
 
   const handleClearAll = useCallback(async () => {
     if (confirm('Are you sure you want to delete all photo sessions? This action cannot be undone.')) {
       try {
-        await sessionStorage.clearAllSessions();
-        await loadData();
+        // Delete all sessions one by one
+        for (const session of sessions) {
+          await removeSession(session.id);
+        }
+        await refreshSessions();
       } catch (error) {
         console.error('Failed to clear sessions:', error);
       }
     }
-  }, [sessionStorage, loadData]);
+  }, [sessions, removeSession, refreshSessions]);
 
   const handleCopyLink = useCallback((session: PhotoSession) => {
     // For now, just copy the data URL to clipboard
@@ -125,6 +111,15 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ onClose, onReplaySessio
       handleCopyLink(session);
     }
   }, [handleCopyLink]);
+
+  const handleDownloadSession = useCallback((session: PhotoSession) => {
+    const link = document.createElement('a');
+    link.href = session.finalImageUrl;
+    link.download = `boothie-call-${session.id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

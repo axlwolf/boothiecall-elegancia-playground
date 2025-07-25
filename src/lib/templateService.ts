@@ -125,7 +125,7 @@ const createTemplateFromDesign = (templateInfo: {id: string, name: string, descr
       subtitleFont: '14px Montserrat'
     },
     assets: {
-      previewImage: `/designs/${templateInfo.id}.png`
+      previewImage: `/playground/designs/${templateInfo.id}.png`
     },
     isActive: true
   };
@@ -163,7 +163,7 @@ const createFallbackTemplate = (layoutType: string): Template => {
       subtitleFont: '14px Montserrat'
     },
     assets: {
-      previewImage: '/placeholder.svg'
+      previewImage: '/playground/placeholder.svg'
     },
     isActive: true
   };

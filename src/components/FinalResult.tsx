@@ -261,7 +261,7 @@ const FinalResult = ({ layout, template, photos, onStartOver, onBack, onSessionC
     };
     
     initializeSession();
-  }, [photos, template, generatePhotoStrip, onSessionComplete, generatedGifUrl]);
+  }, [photos, template, generatePhotoStrip, onSessionComplete]); // Removed generatedGifUrl to prevent loop
 
   return (
     <div className="container-elegancia py-8 min-h-screen">
