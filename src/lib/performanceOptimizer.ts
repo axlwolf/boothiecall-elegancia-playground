@@ -459,30 +459,75 @@ export class PerformanceOptimizer {
    * Preload critical resources
    */
   private async preloadCriticalResources(): Promise<void> {
-    // Get base path from document base or default to /playground/
-    const basePath = document.querySelector('base')?.getAttribute('href') || '/playground/';
-    
-    const criticalResources = [
-      basePath + 'assets/templates/1shot-template.png',
-      basePath + 'assets/templates/3shot-template.png',
-      basePath + 'assets/filters/noir.css',
-      basePath + 'assets/fonts/cinzel.woff2'
-    ];
-
-    const preloadPromises = criticalResources.map(resource => {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.href = resource;
-      link.as = this.getResourceType(resource);
-      document.head.appendChild(link);
+    try {
+      // Get base path from document base or default to /playground/
+      const basePath = document.querySelector('base')?.getAttribute('href') || '/playground/';
       
-      return new Promise<void>((resolve) => {
-        link.onload = () => resolve();
-        link.onerror = () => resolve(); // Don't fail the whole process
-      });
-    });
+      const criticalResources = [
+        basePath + 'assets/templates/1shot-template.png',
+        basePath + 'assets/templates/3shot-template.png',
+        basePath + 'assets/filters/noir.css',
+        basePath + 'assets/fonts/cinzel.woff2'
+      ];
 
-    await Promise.all(preloadPromises);
+      // Check if resources exist before preloading
+      const existingResources = await this.filterExistingResources(criticalResources);
+      
+      if (existingResources.length === 0) {
+        console.log('No critical resources found to preload');
+        return;
+      }
+
+      const preloadPromises = existingResources.map(resource => {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.href = resource;
+        link.as = this.getResourceType(resource);
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+        
+        return new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => {
+            resolve(); // Timeout after 5 seconds
+          }, 5000);
+          
+          link.onload = () => {
+            clearTimeout(timeout);
+            resolve();
+          };
+          link.onerror = () => {
+            clearTimeout(timeout);
+            console.warn(`Failed to preload resource: ${resource}`);
+            resolve(); // Don't fail the whole process
+          };
+        });
+      });
+
+      await Promise.all(preloadPromises);
+    } catch (error) {
+      console.warn('Error in preloadCriticalResources:', error);
+    }
+  }
+
+  /**
+   * Filter resources that actually exist to avoid 404 errors
+   */
+  private async filterExistingResources(resources: string[]): Promise<string[]> {
+    const existingResources: string[] = [];
+    
+    for (const resource of resources) {
+      try {
+        const response = await fetch(resource, { method: 'HEAD' });
+        if (response.ok) {
+          existingResources.push(resource);
+        }
+      } catch (error) {
+        // Resource doesn't exist or is not accessible
+        console.warn(`Resource not accessible: ${resource}`);
+      }
+    }
+    
+    return existingResources;
   }
 
   /**
