@@ -3,6 +3,14 @@
  * Provides intelligent resource management, code splitting, and memory optimization
  */
 
+// Type declarations for WeakRef (ES2021 feature)
+declare global {
+  class WeakRef<T extends object> {
+    constructor(target: T);
+    deref(): T | undefined;
+  }
+}
+
 export interface PerformanceMetrics {
   bundleSize: number;
   memoryUsage: number;
@@ -45,10 +53,10 @@ export class PerformanceOptimizer {
     enablePerformanceMonitoring: true
   };
 
-  private memoryLeakDetector: Map<string, WeakRef<any>> = new Map();
+  private memoryLeakDetector: Map<string, WeakRef<object> | object> = new Map();
   private performanceObserver: PerformanceObserver | null = null;
-  private resourceCache: Map<string, any> = new Map();
-  private componentRegistry: Map<string, () => Promise<any>> = new Map();
+  private resourceCache: Map<string, unknown> = new Map();
+  private componentRegistry: Map<string, () => Promise<unknown>> = new Map();
 
   static getInstance(): PerformanceOptimizer {
     if (!PerformanceOptimizer.instance) {
@@ -128,7 +136,7 @@ export class PerformanceOptimizer {
     );
     
     this.componentRegistry.set('TemplateService', () => 
-      import('./templateService').then(m => m.TemplateService)
+      import('./templateService').then(m => ({ loadTemplatesByLayout: m.loadTemplatesByLayout }))
     );
   }
 
@@ -146,7 +154,7 @@ export class PerformanceOptimizer {
 
       // Check cache first
       if (this.resourceCache.has(componentName)) {
-        return this.resourceCache.get(componentName);
+        return this.resourceCache.get(componentName) as T;
       }
 
       const component = await loader();
@@ -158,7 +166,7 @@ export class PerformanceOptimizer {
       const loadTime = performance.now() - startTime;
       this.trackComponentLoad(componentName, loadTime);
       
-      return component;
+      return component as T;
       
     } catch (error) {
       console.error(`Failed to load component ${componentName}:`, error);
@@ -192,8 +200,10 @@ export class PerformanceOptimizer {
    * Process navigation timing entry
    */
   private processNavigationEntry(entry: PerformanceNavigationTiming): void {
-    this.metrics.loadTime = entry.loadEventEnd - entry.navigationStart;
-    this.metrics.renderTime = entry.domContentLoadedEventEnd - entry.navigationStart;
+    // Use fetchStart as fallback for navigationStart which is deprecated
+    const startTime = entry.fetchStart || 0;
+    this.metrics.loadTime = entry.loadEventEnd - startTime;
+    this.metrics.renderTime = entry.domContentLoadedEventEnd - startTime;
   }
 
   /**
@@ -257,7 +267,7 @@ export class PerformanceOptimizer {
     if (!('memory' in performance)) return;
 
     const updateMemoryMetrics = () => {
-      const memory = (performance as any).memory;
+      const memory = (performance as { memory?: { usedJSHeapSize: number } }).memory;
       this.metrics.memoryUsage = memory.usedJSHeapSize / (1024 * 1024); // Convert to MB
 
       // Warn if memory usage is high
@@ -283,8 +293,8 @@ export class PerformanceOptimizer {
     this.cleanupWeakReferences();
     
     // Suggest garbage collection if available
-    if ('gc' in window && typeof (window as any).gc === 'function') {
-      (window as any).gc();
+    if ('gc' in window && typeof (window as { gc?: () => void }).gc === 'function') {
+      (window as { gc: () => void }).gc();
     }
   }
 
@@ -310,7 +320,7 @@ export class PerformanceOptimizer {
    */
   private cleanupWeakReferences(): void {
     for (const [key, weakRef] of this.memoryLeakDetector.entries()) {
-      if (!weakRef.deref()) {
+      if (weakRef instanceof WeakRef && !weakRef.deref()) {
         this.memoryLeakDetector.delete(key);
       }
     }
@@ -323,7 +333,7 @@ export class PerformanceOptimizer {
     const suspiciousObjects = [];
     
     for (const [key, weakRef] of this.memoryLeakDetector.entries()) {
-      const obj = weakRef.deref();
+      const obj = weakRef instanceof WeakRef ? weakRef.deref() : weakRef;
       if (obj && this.isLikelyMemoryLeak(obj)) {
         suspiciousObjects.push(key);
       }
@@ -337,7 +347,7 @@ export class PerformanceOptimizer {
   /**
    * Check if object is likely a memory leak
    */
-  private isLikelyMemoryLeak(obj: any): boolean {
+  private isLikelyMemoryLeak(obj: unknown): boolean {
     // Simple heuristics for memory leak detection
     if (obj && typeof obj === 'object') {
       // Check for circular references
@@ -380,9 +390,14 @@ export class PerformanceOptimizer {
   /**
    * Register object for memory leak detection
    */
-  registerForMemoryTracking(key: string, obj: any): void {
+  registerForMemoryTracking(key: string, obj: object): void {
     if (this.config.enableMemoryProfiling) {
-      this.memoryLeakDetector.set(key, new WeakRef(obj));
+      // Use WeakRef if available, otherwise store object directly
+      if (typeof WeakRef !== 'undefined') {
+        this.memoryLeakDetector.set(key, new WeakRef(obj));
+      } else {
+        this.memoryLeakDetector.set(key, obj);
+      }
     }
   }
 
