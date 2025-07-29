@@ -5,7 +5,31 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/((?!assets|designs|icons|manifest\\.json|favicon\\.ico|.*\\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|css|js)).*)",
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/layout/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/camera",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/filter",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/final",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/history",
       "destination": "/index.html"
     }
   ],
