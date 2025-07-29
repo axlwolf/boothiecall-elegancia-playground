@@ -1,8 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <base href="/playground/" />
     <meta charset="UTF-8" />
+    
+    <!-- Google Fonts - Load FIRST with absolute URLs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Base href - set explicitly for both environments -->
+    <script>
+      // Detect environment and set appropriate base href
+      const isVercel = window.location.hostname.includes('vercel.app');
+      const basePath = isVercel ? '/' : '/playground/';
+      
+      // Always set base href explicitly
+      const baseElement = document.createElement('base');
+      baseElement.href = basePath;
+      document.head.appendChild(baseElement);
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BoothieCall Playground - Elegancia Nocturna</title>
     <meta name="description" content="A sophisticated web-based photobooth application featuring the elegant Elegancia Nocturna design system" />
@@ -44,11 +60,6 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
-
-    <!-- Google Fonts for Elegancia Nocturna Design System -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   </head>
 
   <body>

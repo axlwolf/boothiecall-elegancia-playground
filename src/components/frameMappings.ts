@@ -9,8 +9,10 @@ interface FrameMappingData {
 
 // Helper function to get base path for assets
 const getAssetPath = (path: string): string => {
-  // Always use /playground/ for consistency in this environment
-  return '/playground/' + path.replace(/^\//, '');
+  // Detect environment dynamically
+  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+  const basePath = isVercel ? '/' : '/playground/';
+  return basePath + path.replace(/^\//, '');
 };
 
 const frameMappings: { [key: string]: FrameMappingData } = {

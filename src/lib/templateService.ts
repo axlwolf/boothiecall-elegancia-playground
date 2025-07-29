@@ -3,6 +3,14 @@ import { Template, TemplatesByLayout } from '@/types/templates';
 // Template cache for performance
 const templateCache: TemplatesByLayout = {};
 
+// Helper function to get base path for assets
+const getAssetPath = (path: string): string => {
+  // Detect environment dynamically
+  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+  const basePath = isVercel ? '/' : '/playground/';
+  return basePath + path.replace(/^\//, '');
+};
+
 // Template data based on actual files in public/designs/
 const templateData: Record<string, Array<{id: string, name: string, description: string}>> = {
   '1shot': [
@@ -125,7 +133,7 @@ const createTemplateFromDesign = (templateInfo: {id: string, name: string, descr
       subtitleFont: '14px Montserrat'
     },
     assets: {
-      previewImage: `/playground/designs/${templateInfo.id}.png`
+      previewImage: getAssetPath(`designs/${templateInfo.id}.png`)
     },
     isActive: true
   };
@@ -163,7 +171,7 @@ const createFallbackTemplate = (layoutType: string): Template => {
       subtitleFont: '14px Montserrat'
     },
     assets: {
-      previewImage: '/playground/placeholder.svg'
+      previewImage: getAssetPath('placeholder.svg')
     },
     isActive: true
   };
