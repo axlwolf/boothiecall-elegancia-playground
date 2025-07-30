@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { swCleanup } from './lib/swCleanup'
+import { performanceMonitor } from './lib/performanceMonitor'
 
 // Handle service worker based on environment
 if (typeof window !== 'undefined') {

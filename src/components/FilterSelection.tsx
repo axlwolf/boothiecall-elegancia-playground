@@ -10,7 +10,7 @@ import { FilterEngine } from '@/lib/filterEngine';
 interface FilterSelectionProps {
   layout: Layout;
   photos: CapturedPhoto[];
-  onComplete: () => void;
+  onComplete: (updatedPhotos: CapturedPhoto[]) => void;
   onBack: () => void;
   onEditPhoto?: (photoIndex: number) => void;
 }
@@ -47,6 +47,23 @@ const FilterSelection = ({ layout, photos, onComplete, onBack, onEditPhoto }: Fi
   useEffect(() => {
     setCurrentPage(0);
   }, [selectedCategory]);
+
+  const handleContinue = () => {
+    const updatedPhotos = photos.map(photo => {
+      const filterId = selectedFilters[photo.id];
+      if (filterId) {
+        return {
+          ...photo,
+          metadata: {
+            ...photo.metadata,
+            filterId: filterId,
+          },
+        };
+      }
+      return photo;
+    });
+    onComplete(updatedPhotos);
+  };
 
   const handleFilterSelect = (photoId: string, filterId: string) => {
     setSelectedFilters(prev => ({
@@ -339,7 +356,7 @@ const FilterSelection = ({ layout, photos, onComplete, onBack, onEditPhoto }: Fi
           )}
           
           <Button
-            onClick={onComplete}
+            onClick={handleContinue}
             className="btn-elegancia animate-pulse-glow"
           >
             Continue to Design

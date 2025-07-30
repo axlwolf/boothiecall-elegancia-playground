@@ -80,7 +80,8 @@ const Photobooth = () => {
     setStep('filters');
   };
 
-  const handleFiltersComplete = () => {
+  const handleFiltersComplete = (updatedPhotos: CapturedPhoto[]) => {
+    setCapturedPhotos(updatedPhotos);
     setStep('result');
   };
 
