@@ -3,10 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     
-    <!-- Google Fonts - Load FIRST with absolute URLs -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Self-hosted Fonts - Optimized for performance -->
+    <link rel="preload" href="/fonts/cinzel-400.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/montserrat-400.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/montserrat-500.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="stylesheet" href="/fonts/fonts.css">
     
     <!-- Base href - set explicitly for both environments -->
     <script>
@@ -18,6 +19,14 @@
       const baseElement = document.createElement('base');
       baseElement.href = basePath;
       document.head.appendChild(baseElement);
+      
+      // Update font preload paths based on environment
+      const fontLinks = document.querySelectorAll('link[href^="/fonts/"]');
+      fontLinks.forEach(link => {
+        if (link.href.startsWith('/fonts/')) {
+          link.href = basePath + link.href.substring(1);
+        }
+      });
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BoothieCall Playground - Elegancia Nocturna</title>
