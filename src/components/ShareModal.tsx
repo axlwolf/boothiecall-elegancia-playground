@@ -41,12 +41,12 @@ const ShareModal: React.FC<ShareModalProps> = ({
     });
 
     if (result.success) {
-      if (result.method === 'social-modal' && result.platforms) {
+      if (result.method === 'social-modal' && 'platforms' in result) {
         // Handle social media platforms
         return;
       }
       
-      setCopySuccess(result.message || 'Shared successfully!');
+      setCopySuccess('message' in result ? result.message : 'Shared successfully!');
       setTimeout(() => setCopySuccess(''), 3000);
       
       if (result.method === 'native') {
@@ -63,7 +63,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
 
   const handleCopyImage = async () => {
     const result = await copyImageToClipboard(imageDataUrl);
-    setCopySuccess(result.message);
+    setCopySuccess('message' in result ? result.message : 'Operation completed');
     setTimeout(() => setCopySuccess(''), 3000);
   };
 
@@ -105,7 +105,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
         <DialogHeader>
           <DialogTitle className="font-cinzel text-gold-300 flex items-center gap-2">
             <Share2 className="w-5 h-5" />
-            Share Your Photo
+            {title}
           </DialogTitle>
         </DialogHeader>
 

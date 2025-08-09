@@ -108,7 +108,7 @@ class IndexedDBAdapter implements StorageAdapter {
       const sessions: PhotoSession[] = [];
       
       request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
         if (cursor) {
           sessions.push(cursor.value);
           cursor.continue();

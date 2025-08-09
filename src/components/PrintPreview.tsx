@@ -152,7 +152,7 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({
         <DialogHeader>
           <DialogTitle className="font-cinzel text-gold-300 flex items-center gap-2">
             <Printer className="w-5 h-5" />
-            Print Preview & Settings
+            {title}
           </DialogTitle>
         </DialogHeader>
 
@@ -447,13 +447,8 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({
             <Card className="card-elegancia">
               <CardHeader>
                 <CardTitle className="text-sm font-montserrat flex items-center gap-2">
-                  <Eye className="w-4 h-4" />
-                  Print Preview
-                  {isGenerating && (
-                    <Badge variant="secondary" className="text-xs">
-                      Generating...
-                    </Badge>
-                  )}
+                  <Settings className="w-4 h-4" />
+                  Print Settings
                 </CardTitle>
               </CardHeader>
               <CardContent>

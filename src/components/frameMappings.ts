@@ -9,10 +9,18 @@ interface FrameMappingData {
 
 // Helper function to get base path for assets
 const getAssetPath = (path: string): string => {
-  // Detect environment dynamically
-  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
-  const basePath = isVercel ? '/' : '/playground/';
-  return basePath + path.replace(/^\//, '');
+  // Resolve relative to the document's base href when available
+  let base = '/';
+  if (typeof document !== 'undefined') {
+    const baseHref = document.querySelector('base')?.getAttribute('href') || document.baseURI || '/';
+    try {
+      base = new URL(baseHref, window.location.origin).pathname;
+    } catch {
+      base = '/';
+    }
+  }
+  if (!base.endsWith('/')) base += '/';
+  return base + path.replace(/^\//, '');
 };
 
 const frameMappings: { [key: string]: FrameMappingData } = {
