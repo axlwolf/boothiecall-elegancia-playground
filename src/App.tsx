@@ -24,17 +24,14 @@ const queryClient = new QueryClient();
 
 const App = () => {
   // Detect environment and set dynamic basename
-  const isVercel = window.location.hostname.includes('vercel.app');
-  const path = window.location.pathname || '/';
+  const host = window.location.hostname;
+  const isVercel = host.includes('vercel.app');
   let basename = '';
   if (isVercel) {
-    // Vercel deploy at root
     basename = '';
-  } else if (path.startsWith('/server/playground')) {
-    // GoDaddy deploy under /server/playground
-    basename = '/server/playground';
+  } else if (host.includes('boothiecall.net')) {
+    basename = '/playground';
   } else {
-    // Local/self-hosted default under /playground
     basename = '/playground';
   }
   
