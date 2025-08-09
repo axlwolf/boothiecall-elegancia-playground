@@ -2,55 +2,82 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    
+
     <!-- Self-hosted Fonts - Optimized for performance -->
-    <link rel="preload" href="/fonts/cinzel-400.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="/fonts/montserrat-400.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="/fonts/montserrat-500.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="stylesheet" href="/fonts/fonts.css">
-    
+    <link
+      rel="preload"
+      href="/fonts/cinzel-400.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/montserrat-400.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/montserrat-500.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+
     <!-- Base href - set explicitly for multiple environments -->
     <script>
       // Detect environment and set appropriate base href
-      const isVercel = window.location.hostname.includes('vercel.app');
-      const path = window.location.pathname || '/';
-      let basePath = '/';
+      const isVercel = window.location.hostname.includes("vercel.app");
+      const path = window.location.pathname || "/";
+      let basePath = "/";
       if (isVercel) {
-        basePath = '/';
-      } else if (path.startsWith('/server/playground')) {
-        basePath = '/server/playground/';
+        basePath = "/";
+      } else if (path.startsWith("/server/playground")) {
+        basePath = "/server/playground/";
       } else {
-        basePath = '/playground/';
+        basePath = "/playground/";
       }
-      
+
       // Always set base href explicitly
-      const baseElement = document.createElement('base');
+      const baseElement = document.createElement("base");
       baseElement.href = basePath;
       document.head.appendChild(baseElement);
-      
+
       // Update font preload paths based on environment using raw attributes
-      const fontLinks = document.querySelectorAll('link[rel="preload"], link[rel="stylesheet"]');
-      fontLinks.forEach(link => {
-        const raw = link.getAttribute('href');
+      const fontLinks = document.querySelectorAll(
+        'link[rel="preload"], link[rel="stylesheet"]'
+      );
+      fontLinks.forEach((link) => {
+        const raw = link.getAttribute("href");
         if (!raw) return;
-        if (raw.startsWith('/fonts/')) {
-          link.setAttribute('href', basePath + raw.substring(1));
+        if (raw.startsWith("/fonts/")) {
+          link.setAttribute("href", basePath + raw.substring(1));
         }
       });
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BoothieCall Playground - Elegancia Nocturna</title>
-    <meta name="description" content="A sophisticated web-based photobooth application featuring the elegant Elegancia Nocturna design system" />
+    <meta
+      name="description"
+      content="A sophisticated web-based photobooth application featuring the elegant Elegancia Nocturna design system"
+    />
     <meta name="author" content="BoothieCall" />
 
-    <meta property="og:title" content="BoothieCall Playground - Elegancia Nocturna" />
-    <meta property="og:description" content="Create stunning photo strips with luxury dark aesthetics and gold accents" />
+    <meta
+      property="og:title"
+      content="BoothieCall Playground - Elegancia Nocturna"
+    />
+    <meta
+      property="og:description"
+      content="Create stunning photo strips with luxury dark aesthetics and gold accents"
+    />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@boothiecall" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json" />
@@ -58,27 +85,52 @@
     <meta name="background-color" content="#0a0a0a" />
     <meta name="display" content="standalone" />
     <meta name="orientation" content="portrait" />
-    
+
     <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png" />
-    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-192x192.png" />
-    
+    <link
+      rel="apple-touch-icon"
+      sizes="152x152"
+      href="icons/icon-152x152.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="icons/icon-192x192.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="167x167"
+      href="icons/icon-192x192.png"
+    />
+
     <!-- Apple PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="BoothieCall" />
-    
+
     <!-- Microsoft Tiles -->
     <meta name="msapplication-TileColor" content="#D8AE48" />
     <meta name="msapplication-TileImage" content="icons/icon-144x144.png" />
     <meta name="msapplication-config" content="browserconfig.xml" />
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="icons/icon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="icons/icon-16x16.png"
+    />
   </head>
 
   <body>
