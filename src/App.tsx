@@ -24,16 +24,8 @@ const queryClient = new QueryClient();
 
 const App = () => {
   // Detect environment and set dynamic basename
-  const host = window.location.hostname;
-  const isVercel = host.includes('vercel.app');
-  let basename = '';
-  if (isVercel) {
-    basename = '';
-  } else if (host.includes('boothiecall.net')) {
-    basename = '/playground';
-  } else {
-    basename = '/playground';
-  }
+  const pathname = window.location.pathname || '/';
+  const basename = pathname.startsWith('/playground') ? '/playground' : '';
   
   return (
     <QueryClientProvider client={queryClient}>
