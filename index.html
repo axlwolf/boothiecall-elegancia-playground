@@ -28,11 +28,13 @@
       baseElement.href = basePath;
       document.head.appendChild(baseElement);
       
-      // Update font preload paths based on environment
-      const fontLinks = document.querySelectorAll('link[href^="/fonts/"]');
+      // Update font preload paths based on environment using raw attributes
+      const fontLinks = document.querySelectorAll('link[rel="preload"], link[rel="stylesheet"]');
       fontLinks.forEach(link => {
-        if (link.href.startsWith('/fonts/')) {
-          link.href = basePath + link.href.substring(1);
+        const raw = link.getAttribute('href');
+        if (!raw) return;
+        if (raw.startsWith('/fonts/')) {
+          link.setAttribute('href', basePath + raw.substring(1));
         }
       });
     </script>
