@@ -25,6 +25,10 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
 
   // Initialize camera
   useEffect(() => {
+    // Copy ref values to variables inside the effect
+    const videoElement = videoRef.current;
+    let localStream: MediaStream | null = null;
+    
     const initCamera = async () => {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -36,13 +40,14 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
           audio: false
         });
         
+        localStream = mediaStream;
         setStream(mediaStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
+        if (videoElement) {
+          videoElement.srcObject = mediaStream;
           // Ensure video starts playing immediately
-          videoRef.current.onloadedmetadata = () => {
-            if (videoRef.current) {
-              videoRef.current.play().catch(console.error);
+          videoElement.onloadedmetadata = () => {
+            if (videoElement) {
+              videoElement.play().catch(console.error);
             }
           };
         }
@@ -54,19 +59,28 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
 
     initCamera();
 
+    // Cleanup on unmount
     return () => {
-      // Cleanup will be handled by another useEffect
-    };
-  }, []); // Remove stream dependency to prevent re-initialization
-
-  // Separate cleanup effect
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      // Cleanup camera stream
+      if (localStream) {
+        localStream.getTracks().forEach(track => {
+          track.stop();
+        });
+      }
+      
+      // Also stop media recorder if active
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      
+      // Cleanup any remaining resources
+      if (videoElement && videoElement.srcObject) {
+        const tracks = (videoElement.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        videoElement.srcObject = null;
       }
     };
-  }, [stream]);
+  }, []);
 
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -94,11 +108,16 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
 
     if (updatedPhotos.length >= layout.shots) {
       // All photos captured
+      // Cleanup camera stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
       setTimeout(() => onComplete(updatedPhotos), 500);
     } else {
       setCurrentShot(currentShot + 1);
     }
-  }, [photos, currentShot, layout.shots, onComplete]);
+  }, [photos, currentShot, layout.shots, onComplete, stream]);
 
   // GIF recording functionality
   const startGifRecording = useCallback(() => {
@@ -137,10 +156,19 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
       
       // Record for 2 seconds
       setTimeout(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          mediaRecorderRef.current.stop();
-          setIsRecordingGif(false);
-        }
+        const stopGifRecording = () => {
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.stop();
+            setIsRecordingGif(false);
+            
+            // Cleanup camera stream immediately
+            if (stream) {
+              stream.getTracks().forEach(track => track.stop());
+              setStream(null);
+            }
+          }
+        };
+        stopGifRecording();
       }, 2000);
       
     } catch (error) {

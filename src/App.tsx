@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./admin/hooks/useAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import CameraTestPage from "./pages/CameraTestPage";
 import AdminLayout from "./admin/components/AdminLayout";
 import Dashboard from "./admin/pages/Dashboard";
 import Assets from "./admin/pages/Assets";
@@ -35,6 +36,7 @@ const App = () => {
           <BrowserRouter basename={basename}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/camera-test" element={<CameraTestPage />} />
             <Route path="/admin/login" element={<Login />} />
             <Route path="/admin" element={<ProtectedRoute />}>
               <Route path="" element={<AdminLayout />}>

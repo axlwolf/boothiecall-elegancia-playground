@@ -121,8 +121,6 @@ const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({ trigger }
         
         <DialogContent 
           className="max-w-2xl max-h-[80vh] bg-gray-900 border-gray-700 overflow-y-auto"
-          aria-labelledby="accessibility-settings-title"
-          aria-describedby="accessibility-settings-description"
         >
           <DialogHeader>
             <DialogTitle 

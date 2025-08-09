@@ -12,6 +12,40 @@ export interface MockPhotoSession {
   metadata?: Record<string, unknown>;
 }
 
+// Mock data exports for tests
+export const mockLayout = {
+  id: 'layout-3shot',
+  name: 'Three Shot Layout',
+  shots: 3,
+  description: 'A layout with three photo slots',
+  dimensions: { width: 400, height: 600 }
+};
+
+export const mockPhotos = [
+  'data:image/jpeg;base64,mockPhotoData1',
+  'data:image/jpeg;base64,mockPhotoData2',
+  'data:image/jpeg;base64,mockPhotoData3'
+];
+
+export const mockTemplate = {
+  id: 'template-1',
+  name: 'Template 1',
+  layout: '3shot',
+  assets: {
+    previewImage: '/designs/template-1.png',
+    overlayImage: '/templates/template-1-overlay.png',
+  },
+  dimensions: {
+    width: 400,
+    height: 600,
+  },
+  photoSlots: [
+    { x: 50, y: 50, width: 300, height: 150 },
+    { x: 50, y: 220, width: 300, height: 150 },
+    { x: 50, y: 390, width: 300, height: 150 },
+  ],
+};
+
 export interface PerformanceMetrics {
   startTime: number;
   endTime: number;
@@ -78,10 +112,8 @@ export const detectMemoryLeaks = async (): Promise<boolean> => {
   return false;
 };
 
-export const measurePerformance = async <T>(
-  operationFn: () => Promise<T> | T,
-  name: string = 'operation'
-): Promise<{ result: T; metrics: PerformanceMetrics }> => {
+// Performance measurement utility
+export const measurePerformance = async <T,>(operationFn: () => Promise<T> | T, operationName = 'operation'): Promise<{ result: T; metrics: PerformanceMetrics }> => {
   const startTime = performance.now();
   const startMemory = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize;
 
@@ -202,6 +234,15 @@ export const customRender = (
     ),
     ...renderOptions,
   });
+};
+
+// Mock render with providers for tests
+export const mockRenderWithProviders = (ui: ReactElement) => {
+  return render(
+    <BrowserRouter>
+      {ui}
+    </BrowserRouter>
+  );
 };
 
 // Mock Services
