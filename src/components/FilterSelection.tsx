@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import React from 'react';
 import { Check, ArrowRight, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout, CapturedPhoto } from '@/types/layout';
@@ -16,11 +17,11 @@ interface FilterSelectionProps {
   onBack: () => void;
 }
 
-const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelectionProps) => {
+const FilterSelection = React.memo(({ layout, photos, onComplete, onBack }: FilterSelectionProps) => {
   const [selectedFilters, setSelectedFilters] = useState<{ [photoId: string]: string }>({});
   const [currentPage, setCurrentPage] = useState(0);
 
-  const filters: Filter[] = [
+  const filters: Filter[] = useMemo(() => [
     { id: 'none', name: 'Original', cssFilter: 'none' },
     { id: 'noir', name: 'Noir', cssFilter: 'grayscale(100%) contrast(120%)' },
     { id: 'vintage', name: 'Vintage', cssFilter: 'sepia(50%) contrast(120%) brightness(110%)' },
@@ -36,7 +37,7 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
     { id: 'contrast', name: 'Contrast', cssFilter: 'contrast(150%)' },
     { id: 'blur', name: 'Blur', cssFilter: 'blur(1px)' },
     { id: 'invert', name: 'Invert', cssFilter: 'invert(100%)' }
-  ];
+  ], []);
 
   const filtersPerPage = 6;
   const totalPages = Math.ceil(filters.length / filtersPerPage);
@@ -45,25 +46,31 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
     (currentPage + 1) * filtersPerPage
   );
 
-  const handleFilterSelect = (photoId: string, filterId: string) => {
+  const handleFilterSelect = useCallback((photoId: string, filterId: string) => {
     setSelectedFilters(prev => ({
       ...prev,
       [photoId]: filterId
     }));
-  };
+  }, []);
 
-  const applyFilterToAll = (filterId: string) => {
+  const applyFilterToAll = useCallback((filterId: string) => {
     const newFilters: { [photoId: string]: string } = {};
     photos.forEach(photo => {
       newFilters[photo.id] = filterId;
     });
     setSelectedFilters(newFilters);
-  };
+  }, [photos]);
 
-  const getFilterStyle = (filterId: string) => {
-    const filter = filters.find(f => f.id === filterId);
+  const filterMap = useMemo(() => {
+    const map = new Map<string, Filter>();
+    filters.forEach(filter => map.set(filter.id, filter));
+    return map;
+  }, [filters]);
+
+  const getFilterStyle = useCallback((filterId: string) => {
+    const filter = filterMap.get(filterId);
     return filter ? { filter: filter.cssFilter } : {};
-  };
+  }, [filterMap]);
 
   return (
     <div className="container-elegancia py-8 min-h-screen">
@@ -97,7 +104,7 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
                 </div>
                 <p className="text-center text-sm text-muted-foreground font-montserrat">
                   Photo {index + 1} - {
-                    filters.find(f => f.id === selectedFilters[photo.id])?.name || 'Original'
+                    filterMap.get(selectedFilters[photo.id])?.name || 'Original'
                   }
                 </p>
               </div>
@@ -226,6 +233,6 @@ const FilterSelection = ({ layout, photos, onComplete, onBack }: FilterSelection
       </div>
     </div>
   );
-};
+});
 
 export default FilterSelection;
