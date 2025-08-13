@@ -116,19 +116,107 @@ dist/
    - No missing asset errors
    - Application loads completely
 
-## Troubleshooting
+## Troubleshooting 403 Forbidden Errors
 
-### 403 Forbidden Error
+### Common Causes and Solutions
 
-**Cause:** Incorrect file permissions or missing `.htaccess` file.
+#### 1. File Permissions Issues
+**Most Common Cause**
 
-**Solutions:**
-1. **Verify `.htaccess` file exists** in the playground directory
-2. **Check file permissions:**
-   - `.htaccess` must be 644
-   - `index.html` must be 644
-   - Directories must be 755
-3. **Ensure `.htaccess` was uploaded correctly** (it's a hidden file)
+**Check:**
+- `.htaccess` file must be exactly 644 permissions
+- `index.html` must be exactly 644 permissions  
+- All directories must be exactly 755 permissions
+- All other files must be exactly 644 permissions
+
+**Fix:**
+```bash
+# In cPanel File Manager, select files/folders and set permissions:
+Directories: 755 (rwxr-xr-x)
+Files: 644 (rw-r--r--)
+```
+
+#### 2. Missing or Corrupted .htaccess File
+**Second Most Common**
+
+**Check:**
+- Verify `.htaccess` file exists in `/public_html/playground/`
+- File size should be > 0 bytes
+- File should contain RewriteEngine directives
+
+**Fix:**
+- Re-upload `.htaccess` file from `dist/` folder
+- Ensure file is not renamed during upload
+- Check that hidden files are visible in File Manager
+
+#### 3. Directory Structure Issues
+**Check:**
+```
+public_html/
+└── playground/          ← Must be exactly this path
+    ├── index.html       ← Must be in playground/ root
+    ├── .htaccess        ← Must be in playground/ root
+    └── assets/          ← Subdirectories are OK
+```
+
+**Common Mistakes:**
+- Uploading to `public_html/` instead of `public_html/playground/`
+- Creating nested directories like `public_html/playground/playground/`
+- Missing the `playground/` directory entirely
+
+#### 4. GoDaddy-Specific Apache Configuration
+**Check:**
+- Verify your hosting plan supports `.htaccess` files
+- Ensure `mod_rewrite` is enabled (most GoDaddy plans have this)
+- Check if there's a parent `.htaccess` in `public_html/` that conflicts
+
+**Fix:**
+- Contact GoDaddy support to verify Apache modules
+- Check cPanel → "Apache Modules" if available
+- Temporarily rename parent `.htaccess` files to test
+
+#### 5. Index File Configuration
+**Check:**
+- Verify `index.html` is the default index file
+- Check cPanel → "Index Manager" settings
+
+**Fix:**
+- In cPanel, go to "Index Manager"
+- Navigate to `/playground/` directory
+- Ensure `index.html` is listed as a default index file
+
+### Advanced Troubleshooting
+
+#### Test with Simple HTML File
+Create a test file `test.html` in `/public_html/playground/`:
+```html
+<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body><h1>Test Page Works</h1></body>
+</html>
+```
+
+If `https://boothiecall.net/playground/test.html` works but `index.html` doesn't, the issue is with the React app files.
+
+#### Check Error Logs
+1. In cPanel, go to "Error Logs"
+2. Look for entries related to `/playground/`
+3. Common error patterns:
+   - "Permission denied" → File permissions issue
+   - "File does not exist" → Missing files or wrong path
+   - "Invalid command" → `.htaccess` syntax error
+
+#### Minimal .htaccess Test
+Try this minimal `.htaccess` first:
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /playground/index.html [QSA,L]
+```
+
+If this works, gradually add back other directives.
 
 ### 404 Not Found for Routes
 
@@ -137,7 +225,7 @@ dist/
 **Solutions:**
 1. **Verify `.htaccess` contains the correct rewrite rules**
 2. **Check that mod_rewrite is enabled** on your hosting (most GoDaddy plans have it)
-3. **Ensure RewriteBase is set correctly** to `/playground/`
+3. **Test RewriteRule syntax** with minimal configuration first
 
 ### Assets Not Loading (CSS/JS 404s)
 
@@ -147,6 +235,7 @@ dist/
 1. **Verify all files from `dist/assets/` were uploaded**
 2. **Check that file paths in `index.html` are correct**
 3. **Ensure no files were corrupted during upload**
+4. **Verify asset file permissions are 644**
 
 ### PWA/Manifest Issues
 
@@ -183,6 +272,21 @@ public_html/
     ├── images/
     └── manifest.json
 ```
+
+## Emergency Checklist for 403 Errors
+
+If you're still getting 403 errors, go through this checklist:
+
+- [ ] **File permissions**: playground/ = 755, all files = 644
+- [ ] **Directory structure**: Files in `public_html/playground/` not nested deeper
+- [ ] **.htaccess exists**: File is present and not empty
+- [ ] **.htaccess permissions**: Exactly 644, not 755 or other
+- [ ] **index.html exists**: File is present in playground/ root
+- [ ] **index.html permissions**: Exactly 644
+- [ ] **Test simple HTML**: Create test.html to verify basic access works
+- [ ] **Check error logs**: Look for specific error messages in cPanel
+- [ ] **Verify hosting plan**: Confirm .htaccess and mod_rewrite are supported
+- [ ] **Parent .htaccess**: Check if `public_html/.htaccess` conflicts
 
 ## Support
 
