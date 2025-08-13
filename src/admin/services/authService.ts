@@ -1,5 +1,13 @@
+interface LoginResponse {
+  token: string;
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
 export const authService = {
-  login: async (email, password) => {
+  login: async (email: string, password: string): Promise<LoginResponse> => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (email === 'admin@example.com' && password === 'password') {
@@ -14,8 +22,7 @@ export const authService = {
     });
   },
 
-  logout: async () => {
-    // For now, just clear the token locally
+  logout: async (): Promise<void> => {
     return Promise.resolve();
   },
 };
