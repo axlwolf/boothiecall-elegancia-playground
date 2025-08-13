@@ -6,10 +6,16 @@
   "rewrites": [
     {
       "source": "/playground",
+      "has": [
+        { "type": "header", "key": "accept", "value": ".*text/html.*" }
+      ],
       "destination": "/index.html"
     },
     {
       "source": "/playground/(.*)",
+      "has": [
+        { "type": "header", "key": "accept", "value": ".*text/html.*" }
+      ],
       "destination": "/index.html"
     },
     {

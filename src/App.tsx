@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./admin/hooks/useAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -23,17 +23,20 @@ import ProtectedRoute from "./admin/components/ProtectedRoute";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Detect environment and set dynamic basename
-  const pathname = window.location.pathname || '/';
-  const basename = pathname.startsWith('/playground') ? '/playground' : '';
-  
+  // Detect environment
+  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+  // Determine router and basename per environment
+  const pathname = typeof window !== 'undefined' ? (window.location.pathname || '/') : '/';
+  const basename = isVercel ? '' : (pathname.startsWith('/playground') ? '/playground' : '');
+  const Router: React.ComponentType<React.ComponentProps<typeof BrowserRouter>> = (isVercel ? (HashRouter as unknown as typeof BrowserRouter) : BrowserRouter);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <BrowserRouter basename={basename}>
+          <Router basename={basename}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/camera-test" element={<CameraTestPage />} />
@@ -54,7 +57,7 @@ const App = () => {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </BrowserRouter>
+          </Router>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
