@@ -118,6 +118,33 @@ dist/
 
 ## Troubleshooting 403 Forbidden Errors
 
+### Emergency Diagnostic Checklist
+
+If you're getting 403 errors, follow this systematic approach:
+
+1. **[ ] Upload test-basic.html first**
+   - Upload `test-basic.html` to `/public_html/playground/`
+   - Set permissions to 644
+   - Test: `https://boothiecall.net/playground/test-basic.html`
+   - If this fails → File permissions or directory structure issue
+
+2. **[ ] Test directory index**
+   - Rename `test-basic.html` to `index.html`
+   - Test: `https://boothiecall.net/playground/`
+   - If this fails → Index file configuration issue
+
+3. **[ ] Test minimal .htaccess**
+   - Use `.htaccess-minimal` configuration (see alternative configs below)
+   - If this fails → Apache mod_rewrite disabled or .htaccess not allowed
+
+4. **[ ] Check file permissions**
+   - Upload `test-permissions.php` and access it
+   - Verify all directories are 755, all files are 644
+
+5. **[ ] Progressive .htaccess testing**
+   - Start with minimal config, add features one by one
+   - Identify which directive causes the 403 error
+
 ### Common Causes and Solutions
 
 #### 1. File Permissions Issues
@@ -183,6 +210,63 @@ public_html/
 **Fix:**
 - In cPanel, go to "Index Manager"
 - Navigate to `/playground/` directory
+- Ensure `index.html` is listed as a default index file
+
+### Alternative .htaccess Configurations
+
+If the main .htaccess causes 403 errors, try these alternatives:
+
+#### Minimal Configuration (`.htaccess-minimal`)
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [L]
+```
+
+#### No Headers Configuration (`.htaccess-no-headers`)
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [QSA,L]
+
+# No security headers - for limited Apache modules
+```
+
+### Diagnostic Files Included
+
+The project now includes diagnostic files to help identify the root cause:
+
+- **`test-basic.html`** - Test basic file serving
+- **`test-permissions.php`** - Check file permissions and server info
+- **`.htaccess-minimal`** - Minimal Apache configuration
+- **`.htaccess-no-headers`** - Configuration without security headers
+
+Upload these files to test different aspects of your GoDaddy hosting configuration.
+
+### Advanced Troubleshooting
+
+#### Check Error Logs
+1. In cPanel, go to "Error Logs"
+2. Look for entries related to `/playground/`
+3. Common error patterns:
+   - "Permission denied" → File permissions issue
+   - "File does not exist" → Missing files or wrong path
+   - "Invalid command" → `.htaccess` syntax error or unsupported directive
+
+#### Test with Simple HTML First
+Before uploading the full React app:
+1. Upload only `test-basic.html`
+2. Verify it loads at `https://boothiecall.net/playground/test-basic.html`
+3. If this works, the issue is with the React app configuration
+4. If this fails, the issue is with basic hosting setup
+
+#### Progressive .htaccess Testing
+1. Start with no `.htaccess` file
+2. Add minimal `.htaccess` with only `RewriteEngine On`
+3. Gradually add directives until you find the problematic one
+4. Use alternative configurations if certain directives aren't supported
 - Ensure `index.html` is listed as a default index file
 
 ### Advanced Troubleshooting
