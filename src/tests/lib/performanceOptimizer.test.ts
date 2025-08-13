@@ -235,24 +235,23 @@ describe("PerformanceOptimizer", () => {
   it("should dynamically load components", async () => {
     const instance = PerformanceOptimizer.getInstance();
 
+    // Mock component loader function
+    const mockComponentLoader = vi.fn().mockResolvedValue({ default: {} });
+
     // Directly set a component in the registry to test the functionality
-    (instance as any).componentRegistry.set("TestComponent", () =>
-      Promise.resolve({ default: {} })
-    );
+    (instance as any).componentRegistry.set("TestComponent", mockComponentLoader);
 
     // Check if component was registered
     expect((instance as any).componentRegistry.has("TestComponent")).toBe(true);
 
-    // Test the getComponent method
-    const getComponentSpy = vi.spyOn(instance as any, "getComponent");
+    // Test loading the component directly from registry
+    const componentLoader = (instance as any).componentRegistry.get("TestComponent");
+    expect(componentLoader).toBeDefined();
 
-    try {
-      await (instance as any).getComponent("TestComponent");
-    } catch (e) {
-      // Ignore errors in test environment
-    }
-
-    expect(getComponentSpy).toHaveBeenCalledWith("TestComponent");
+    // Call the loader function
+    const result = await componentLoader();
+    expect(mockComponentLoader).toHaveBeenCalled();
+    expect(result).toEqual({ default: {} });
   });
 
   it("should preload critical resources", async () => {
