@@ -27,14 +27,12 @@ export default defineConfig(({ mode }) => {
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Core React libraries
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+          // Core React libraries (including React Router to prevent context conflicts)
+          if (id.includes('node_modules/react/') || 
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/react-router-dom/') ||
+              id.includes('node_modules/@remix-run/router/')) {
             return 'vendor';
-          }
-          
-          // Router
-          if (id.includes('node_modules/react-router-dom/')) {
-            return 'router';
           }
           
           // UI Component libraries
