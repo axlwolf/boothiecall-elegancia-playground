@@ -17,28 +17,28 @@ const LayoutSelection = ({ onSelectLayout, onBack }: LayoutSelectionProps) => {
       name: 'Classic Single',
       shots: 1,
       description: 'Perfect for portraits and headshots',
-      preview: '□'
+      preview: '1shot'
     },
     {
       id: '3shot',
       name: 'Triple Strip',
       shots: 3,
       description: 'Classic photobooth experience',
-      preview: '□\n□\n□'
+      preview: '3shot'
     },
     {
       id: '4shot',
       name: 'Quad Layout',
       shots: 4,
       description: 'Tell your story in four frames',
-      preview: '□\n□\n□\n□'
+      preview: '4shot'
     },
     {
       id: '6shot',
       name: 'Gallery Grid',
       shots: 6,
       description: 'Maximum memories in 2x3 grid',
-      preview: '□□\n□□\n□□'
+      preview: '6shot'
     }
   ];
 
@@ -71,10 +71,43 @@ const LayoutSelection = ({ onSelectLayout, onBack }: LayoutSelectionProps) => {
           >
             <div className="text-center">
               {/* Layout Preview */}
-              <div className="w-24 h-32 mx-auto mb-6 bg-gradient-card rounded-lg flex items-center justify-center border border-gold-400/30">
-                <div className="text-primary text-2xl font-mono leading-tight whitespace-pre">
-                  {layout.preview}
-                </div>
+              <div className="w-24 h-32 mx-auto mb-6 bg-gradient-card rounded-lg flex flex-col items-center justify-center border border-gold-400/30 p-2">
+                {layout.id === '1shot' && (
+                  <div className="flex items-center justify-center h-full">
+                    <Camera className="w-8 h-8 text-primary" />
+                  </div>
+                )}
+                {layout.id === '3shot' && (
+                  <div className="flex flex-col items-center justify-center gap-2 h-full">
+                    <Camera className="w-6 h-6 text-primary" />
+                    <Camera className="w-6 h-6 text-primary" />
+                    <Camera className="w-6 h-6 text-primary" />
+                  </div>
+                )}
+                {layout.id === '4shot' && (
+                  <div className="flex flex-col items-center justify-center gap-1 h-full">
+                    <Camera className="w-5 h-5 text-primary" />
+                    <Camera className="w-5 h-5 text-primary" />
+                    <Camera className="w-5 h-5 text-primary" />
+                    <Camera className="w-5 h-5 text-primary" />
+                  </div>
+                )}
+                {layout.id === '6shot' && (
+                  <div className="flex flex-col items-center justify-center gap-1 h-full">
+                    <div className="flex gap-1">
+                      <Camera className="w-4 h-4 text-primary" />
+                      <Camera className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex gap-1">
+                      <Camera className="w-4 h-4 text-primary" />
+                      <Camera className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex gap-1">
+                      <Camera className="w-4 h-4 text-primary" />
+                      <Camera className="w-4 h-4 text-primary" />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Layout Info */}

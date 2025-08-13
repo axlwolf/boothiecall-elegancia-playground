@@ -10,6 +10,9 @@ export interface TemplateAssets {
   backgroundImage?: string;
   overlayImage?: string;
   previewImage: string;
+  background?: string;
+  overlay?: string;
+  logo?: string;
 }
 
 export interface TemplateStyling {

@@ -1,0 +1,83 @@
+/* Self-hosted Google Fonts - Optimized for BoothieCall Elegancia */
+
+/* Cinzel Font Family */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./cinzel-400.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./cinzel-500.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./cinzel-600.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./cinzel-700.ttf') format('truetype');
+}
+
+/* Montserrat Font Family */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./montserrat-300.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./montserrat-400.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./montserrat-500.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./montserrat-600.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./montserrat-700.ttf') format('truetype');
+}
+
+/* Font preload hints for critical weights */
+@media (prefers-reduced-motion: no-preference) {
+  /* Preload most commonly used weights */
+  link[rel="preload"][as="font"][href*="cinzel-400"] { font-display: swap; }
+  link[rel="preload"][as="font"][href*="montserrat-400"] { font-display: swap; }
+  link[rel="preload"][as="font"][href*="montserrat-500"] { font-display: swap; }
+}

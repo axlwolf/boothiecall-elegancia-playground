@@ -6,7 +6,7 @@ import {
   kernels,
   ImageAdjustments
 } from './imageProcessing';
-import { EnhancedFilter, PhotoEdit } from '@/types/filters';
+import { EnhancedFilter } from '@/types/filters';
 
 /**
  * Main filter engine for applying advanced canvas-based filters
@@ -26,7 +26,7 @@ export class FilterEngine {
    * Apply a filter to an image
    */
   async applyFilter(imageUrl: string, filter: EnhancedFilter): Promise<string> {
-    const cacheKey = `${imageUrl}_${filter.id}`;
+    const cacheKey = `${imageUrl}_${filter.id}_${filter.cssFilter || ''}`;
     
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
@@ -48,7 +48,12 @@ export class FilterEngine {
       
       // Apply artistic effects based on filter category
       imageData = await this.applyArtisticEffect(imageData, filter);
-      
+
+      // If a CSS filter is provided (used for fast previews), approximate it on canvas
+      if (filter.cssFilter) {
+        imageData = this.applyCssFilterApproximation(imageData, filter.cssFilter);
+      }
+
       const result = imageDataToDataUrl(imageData);
       this.cache.set(cacheKey, result);
       return result;
@@ -219,7 +224,7 @@ export class FilterEngine {
    */
   private watercolorEffect(imageData: ImageData): ImageData {
     // Apply blur for soft effect
-    let result = applyConvolution(imageData, kernels.blur, 9);
+    const result = applyConvolution(imageData, kernels.blur, 9);
     
     // Reduce color palette
     const data = result.data;
@@ -232,6 +237,50 @@ export class FilterEngine {
     }
     
     return result;
+  }
+
+  /**
+   * Approximate a subset of CSS filter functions on ImageData by mapping them to our adjustments.
+   * Supports: hue-rotate(deg), saturate(%), contrast(%), brightness(%).
+   */
+  private applyCssFilterApproximation(imageData: ImageData, css: string): ImageData {
+    try {
+      const adjustments: ImageAdjustments = {
+        brightness: 0,
+        contrast: 0,
+        saturation: 0,
+        hue: 0,
+        exposure: 0,
+        highlights: 0,
+        shadows: 0,
+      };
+
+      // Parse filter functions like: "hue-rotate(180deg) saturate(200%) contrast(120%)"
+      const regex = /(hue-rotate|saturate|contrast|brightness)\(([^)]+)\)/g;
+      let match: RegExpExecArray | null;
+      while ((match = regex.exec(css)) !== null) {
+        const fn = match[1];
+        const raw = match[2].trim();
+        if (fn === 'hue-rotate') {
+          const deg = parseFloat(raw.replace('deg', '')) || 0;
+          adjustments.hue += deg;
+        } else if (fn === 'saturate') {
+          const pct = parseFloat(raw.replace('%', '')) || 100;
+          adjustments.saturation += pct - 100; // 100% => 0 change
+        } else if (fn === 'contrast') {
+          const pct = parseFloat(raw.replace('%', '')) || 100;
+          adjustments.contrast += pct - 100;
+        } else if (fn === 'brightness') {
+          const pct = parseFloat(raw.replace('%', '')) || 100;
+          adjustments.brightness += pct - 100;
+        }
+      }
+
+      return applyAdjustments(imageData, adjustments);
+    } catch (e) {
+      console.warn('Failed to approximate CSS filter on canvas:', e);
+      return imageData;
+    }
   }
 
   /**

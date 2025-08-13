@@ -2,10 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./admin/hooks/useAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import CameraTestPage from "./pages/CameraTestPage";
 import AdminLayout from "./admin/components/AdminLayout";
 import Dashboard from "./admin/pages/Dashboard";
 import Assets from "./admin/pages/Assets";
@@ -21,15 +22,24 @@ import ProtectedRoute from "./admin/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <BrowserRouter>
+const App = () => {
+  // Detect environment
+  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+  // Determine router and basename per environment
+  const pathname = typeof window !== 'undefined' ? (window.location.pathname || '/') : '/';
+  const basename = isVercel ? '' : (pathname.startsWith('/playground') ? '/playground' : '');
+  const Router: React.ComponentType<React.ComponentProps<typeof BrowserRouter>> = (isVercel ? (HashRouter as unknown as typeof BrowserRouter) : BrowserRouter);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <Router basename={basename}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/camera-test" element={<CameraTestPage />} />
             <Route path="/admin/login" element={<Login />} />
             <Route path="/admin" element={<ProtectedRoute />}>
               <Route path="" element={<AdminLayout />}>
@@ -47,10 +57,11 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+          </Router>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

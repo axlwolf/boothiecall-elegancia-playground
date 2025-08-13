@@ -25,6 +25,10 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
 
   // Initialize camera
   useEffect(() => {
+    // Copy ref values to variables inside the effect
+    const videoElement = videoRef.current;
+    let localStream: MediaStream | null = null;
+    
     const initCamera = async () => {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -36,9 +40,16 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
           audio: false
         });
         
+        localStream = mediaStream;
         setStream(mediaStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
+        if (videoElement) {
+          videoElement.srcObject = mediaStream;
+          // Ensure video starts playing immediately
+          videoElement.onloadedmetadata = () => {
+            if (videoElement) {
+              videoElement.play().catch(console.error);
+            }
+          };
         }
       } catch (err) {
         console.error('Error accessing camera:', err);
@@ -48,9 +59,25 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
 
     initCamera();
 
+    // Cleanup on unmount
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      // Cleanup camera stream
+      if (localStream) {
+        localStream.getTracks().forEach(track => {
+          track.stop();
+        });
+      }
+      
+      // Also stop media recorder if active
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      
+      // Cleanup any remaining resources
+      if (videoElement && videoElement.srcObject) {
+        const tracks = (videoElement.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        videoElement.srcObject = null;
       }
     };
   }, []);
@@ -81,11 +108,16 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
 
     if (updatedPhotos.length >= layout.shots) {
       // All photos captured
+      // Cleanup camera stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
       setTimeout(() => onComplete(updatedPhotos), 500);
     } else {
       setCurrentShot(currentShot + 1);
     }
-  }, [photos, currentShot, layout.shots, onComplete]);
+  }, [photos, currentShot, layout.shots, onComplete, stream]);
 
   // GIF recording functionality
   const startGifRecording = useCallback(() => {
@@ -124,16 +156,25 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
       
       // Record for 2 seconds
       setTimeout(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          mediaRecorderRef.current.stop();
-          setIsRecordingGif(false);
-        }
+        const stopGifRecording = () => {
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.stop();
+            setIsRecordingGif(false);
+            
+            // Cleanup camera stream immediately
+            if (stream) {
+              stream.getTracks().forEach(track => track.stop());
+              setStream(null);
+            }
+          }
+        };
+        stopGifRecording();
       }, 2000);
       
     } catch (error) {
       console.error('Error starting GIF recording:', error);
     }
-  }, [stream, photos]);
+  }, [stream, photos, recordedChunksRef, setIsRecordingGif, setPhotos]);
 
   const capturePhotoWithGif = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -180,16 +221,20 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
       setCountdown(prev => {
         if (prev === null || prev <= 1) {
           clearInterval(countdownInterval);
+          // Show flash effect right before capture
           setTimeout(() => {
             if (withGif) {
               capturePhotoWithGif();
             } else {
               capturePhoto();
             }
-            setCountdown(null);
-            setIsCapturing(false);
+            // Reset states after a brief delay
+            setTimeout(() => {
+              setCountdown(null);
+              setIsCapturing(false);
+            }, 200);
           }, 100);
-          return null;
+          return 0; // Show flash when countdown hits 0
         }
         return prev - 1;
       });
@@ -239,6 +284,13 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
                 playsInline
                 muted
                 className="w-full h-full object-cover"
+                style={{ background: '#000' }}
+                onLoadedMetadata={() => {
+                  // Ensure video is playing smoothly
+                  if (videoRef.current) {
+                    videoRef.current.play().catch(console.error);
+                  }
+                }}
               />
               
               {/* Countdown Overlay */}
@@ -251,8 +303,8 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
               )}
 
               {/* Flash Effect */}
-              {countdown === null && isCapturing && (
-                <div className="absolute inset-0 bg-white opacity-80 animate-ping" />
+              {countdown === 0 && (
+                <div className="absolute inset-0 bg-white opacity-90 animate-flash" />
               )}
             </div>
 
