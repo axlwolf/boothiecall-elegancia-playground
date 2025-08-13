@@ -26,65 +26,11 @@ export default defineConfig(({ mode }) => {
     sourcemap: mode !== "production",
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Core React libraries (including React Router to prevent context conflicts)
-          if (id.includes('node_modules/react/') || 
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/react-router-dom/') ||
-              id.includes('node_modules/@remix-run/router/')) {
-            return 'vendor';
-          }
-          
-          // UI Component libraries
-          if (id.includes('node_modules/@radix-ui/') || 
-              id.includes('node_modules/lucide-react/') ||
-              id.includes('node_modules/@tabler/icons-react/')) {
-            return 'ui';
-          }
-          
-          // Data fetching and state management
-          if (id.includes('node_modules/@tanstack/react-query/') ||
-              id.includes('node_modules/zustand/') ||
-              id.includes('node_modules/immer/')) {
-            return 'data';
-          }
-          
-          // Utility libraries
-          if (id.includes('node_modules/lodash/') ||
-              id.includes('node_modules/date-fns/') ||
-              id.includes('node_modules/clsx/') ||
-              id.includes('node_modules/class-variance-authority/') ||
-              id.includes('node_modules/tailwind-merge/')) {
-            return 'utils';
-          }
-          // Admin panel (lazy loaded)
-          if (id.includes('/admin/')) {
-            return 'admin';
-          }
-          
-          // Photo processing and filters
-          if (id.includes('filterEngine') || 
-              id.includes('photoProcessor') || 
-              id.includes('imageUtils')) {
-            return 'photo';
-          }
-          
-          // Templates and designs
-          if (id.includes('templateService') || 
-              id.includes('frameMappings') || 
-              id.includes('/designs/')) {
-            return 'templates';
-          }
-          
-          // PWA and service worker
-          if (id.includes('pwaService') || 
-              id.includes('serviceWorker') || 
-              id.includes('cacheService')) {
-            return 'pwa';
-          }
-          
-          // Return undefined for no match (important!)
-          return undefined;
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-label', '@radix-ui/react-select', '@radix-ui/react-separator', '@radix-ui/react-slot', '@radix-ui/react-switch', '@radix-ui/react-tabs', '@radix-ui/react-toast', 'lucide-react'],
+          utils: ['clsx', 'class-variance-authority', 'tailwind-merge'],
+          data: ['@tanstack/react-query']
         },
       },
     },
