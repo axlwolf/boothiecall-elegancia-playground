@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [QSA,L]
+
+# No security headers - for limited Apache modules
+# Use this if mod_headers is not available on GoDaddy
