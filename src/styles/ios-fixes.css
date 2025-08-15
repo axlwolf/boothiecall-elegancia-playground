@@ -1,0 +1,45 @@
+/* iOS-specific layout utilities and card fixes */
+
+/* Viewport height utilities with svh/dvh fallbacks */
+:root {
+  /* nothing for now */
+}
+
+.h-svh { height: 100svh; }
+.min-h-svh { min-height: 100svh; }
+.h-dvh { height: 100dvh; }
+.min-h-dvh { min-height: 100dvh; }
+
+/* Safe-area paddings for iOS */
+.safe-area-padding {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Card overflow and text wrapping helpers */
+.card-fixes {
+  overflow: hidden;
+  border-radius: 0.75rem; /* ~rounded-xl */
+}
+.card-fixes img,
+.card-fixes video {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+.card-fixes .media-cover {
+  aspect-ratio: 16 / 9; /* adjust as needed */
+  width: 100%;
+  overflow: hidden;
+}
+.card-fixes .content {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.35; /* leading-snug */
+}
+
+/* Debug focus outline class toggled by DebugBar */
+.debug-focus-outline *:focus { outline: 2px dashed #22d3ee !important; outline-offset: 2px; }

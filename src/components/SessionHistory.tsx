@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { usePhotoSessions, useSync } from '@/hooks/usePersistence';
 import { PhotoSession, SessionSummary, SessionStats } from '@/types/session';
+import { copyText } from '@/lib/clipboard';
 
 interface SessionHistoryProps {
   onClose: () => void;
@@ -80,13 +81,14 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ onClose, onReplaySessio
     }
   }, [sessions, removeSession, refreshSessions]);
 
-  const handleCopyLink = useCallback((session: PhotoSession) => {
-    // For now, just copy the data URL to clipboard
-    navigator.clipboard.writeText(session.finalImageUrl).then(() => {
-      alert('Image data copied to clipboard!');
-    }).catch(() => {
+  const handleCopyLink = useCallback(async (session: PhotoSession) => {
+    // Copy the data URL to clipboard using robust cross-platform utility
+    const result = await copyText(session.finalImageUrl);
+    if (result.ok) {
+      alert('Image link copied to clipboard!');
+    } else {
       alert('Unable to copy. Please download the image instead.');
-    });
+    }
   }, []);
 
   const handleShareSession = useCallback(async (session: PhotoSession) => {

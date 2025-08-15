@@ -29,5 +29,7 @@ export interface CapturedPhoto {
   dataUrl: string;
   timestamp: number;
   gifData?: Blob;
+  // iOS fallback: when MediaRecorder/webm is unavailable, store sampled frames
+  gifFrames?: string[];
   metadata?: PhotoMetadata;
 }

@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, RotateCcw, Download, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout, CapturedPhoto } from '@/types/layout';
+import { isIOS } from '@/lib/debugFlags';
 
 interface CameraCaptureProps {
   layout: Layout;
@@ -119,80 +120,129 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
     }
   }, [photos, currentShot, layout.shots, onComplete, stream]);
 
-  // GIF recording functionality
-  const startGifRecording = useCallback(() => {
+  // GIF recording functionality with iOS fallback
+  const startGifRecording = useCallback((photoIndex?: number) => {
     if (!stream || !videoRef.current) return;
-    
+
+    const supportsWebm = (() => {
+      try {
+        // Some Safari versions throw when accessing isTypeSupported
+        // or simply don't support webm/MediaRecorder
+        // Prefer robust feature detection over UA where possible
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const MR: any = (window as unknown as { MediaRecorder?: unknown }).MediaRecorder || MediaRecorder;
+        return typeof MR !== 'undefined' && typeof MediaRecorder !== 'undefined' &&
+          typeof MediaRecorder.isTypeSupported === 'function' &&
+          MediaRecorder.isTypeSupported('video/webm;codecs=vp8');
+      } catch {
+        return false;
+      }
+    })();
+
+    // iOS or no webm support: sample frames from canvas for ~2s
+    if (isIOS() || !supportsWebm) {
+      if (!canvasRef.current) return;
+      try {
+        setIsRecordingGif(true);
+        const frames: string[] = [];
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx || !video) return;
+
+        const startTime = Date.now();
+        const durationMs = 2000;
+        const targetFps = 8; // keep it light for iOS
+        const intervalMs = Math.floor(1000 / targetFps);
+
+        const sample = () => {
+          if (!video || !ctx || !canvas) return;
+          canvas.width = video.videoWidth || canvas.width || 640;
+          canvas.height = video.videoHeight || canvas.height || 480;
+          ctx.drawImage(video, 0, 0);
+          frames.push(canvas.toDataURL('image/png', 0.85));
+        };
+
+        // First frame immediately
+        sample();
+        const interval = window.setInterval(() => {
+          if (Date.now() - startTime >= durationMs) {
+            window.clearInterval(interval);
+            // Attach frames to the specified photo (or last one)
+            const idx = typeof photoIndex === 'number' ? photoIndex : Math.max(0, photos.length - 1);
+            const updated = [...photos];
+            if (updated[idx]) {
+              updated[idx] = { ...updated[idx], gifFrames: frames };
+              setPhotos(updated);
+            }
+            setIsRecordingGif(false);
+          } else {
+            sample();
+          }
+        }, intervalMs);
+      } catch (error) {
+        console.error('Error sampling frames for iOS GIF fallback:', error);
+        setIsRecordingGif(false);
+      }
+      return;
+    }
+
+    // Default path: MediaRecorder with webm
     try {
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'video/webm;codecs=vp8'
       });
-      
+
       recordedChunksRef.current = [];
-      
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           recordedChunksRef.current.push(event.data);
         }
       };
-      
+
       mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        // Store the GIF data with the current photo
-        if (photos.length > 0) {
-          const lastPhotoIndex = photos.length - 1;
-          const updatedPhotos = [...photos];
-          updatedPhotos[lastPhotoIndex] = {
-            ...updatedPhotos[lastPhotoIndex],
+        // Store the GIF data with the selected or last photo
+        const idx = typeof photoIndex === 'number' ? photoIndex : Math.max(0, photos.length - 1);
+        const updatedPhotos = [...photos];
+        if (updatedPhotos[idx]) {
+          updatedPhotos[idx] = {
+            ...updatedPhotos[idx],
             gifData: blob
           };
           setPhotos(updatedPhotos);
         }
       };
-      
+
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecordingGif(true);
-      
+
       // Record for 2 seconds
       setTimeout(() => {
-        const stopGifRecording = () => {
-          if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-            mediaRecorderRef.current.stop();
-            setIsRecordingGif(false);
-            
-            // Cleanup camera stream immediately
-            if (stream) {
-              stream.getTracks().forEach(track => track.stop());
-              setStream(null);
-            }
-          }
-        };
-        stopGifRecording();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop();
+          setIsRecordingGif(false);
+        }
       }, 2000);
-      
     } catch (error) {
       console.error('Error starting GIF recording:', error);
     }
-  }, [stream, photos, recordedChunksRef, setIsRecordingGif, setPhotos]);
+  }, [stream, photos]);
 
   const capturePhotoWithGif = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
 
-    // Start GIF recording first
-    startGifRecording();
-
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
-    
     if (!context) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    
     context.drawImage(video, 0, 0);
-    
+
     const dataUrl = canvas.toDataURL('image/png', 0.9);
     const newPhoto: CapturedPhoto = {
       id: `photo-${Date.now()}`,
@@ -200,8 +250,12 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
       timestamp: Date.now()
     };
 
+    const photoIndex = photos.length; // index of the photo we are about to push
     const updatedPhotos = [...photos, newPhoto];
     setPhotos(updatedPhotos);
+
+    // Start GIF recording linked to this photo index
+    startGifRecording(photoIndex);
 
     if (updatedPhotos.length >= layout.shots) {
       // All photos captured, wait a bit for GIF recording to complete
@@ -248,7 +302,7 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
 
   if (error) {
     return (
-      <div className="container-elegancia py-8 min-h-screen flex items-center justify-center">
+      <div className="container-elegancia py-8 min-h-screen h-svh safe-area-padding card-fixes flex items-center justify-center">
         <div className="card-elegancia p-8 text-center max-w-md">
           <Camera className="w-16 h-16 mx-auto mb-4 text-destructive" />
           <h2 className="font-cinzel font-semibold text-xl mb-4">Camera Error</h2>
@@ -262,7 +316,7 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
   }
 
   return (
-    <div className="container-elegancia py-8 min-h-screen">
+    <div className="container-elegancia py-8 min-h-screen h-svh safe-area-padding card-fixes overflow-hidden">
       {/* Header */}
       <div className="text-center mb-8 animate-fade-in">
         <h1 className="text-3xl md:text-4xl font-cinzel font-bold text-glow mb-2">
@@ -277,7 +331,7 @@ const CameraCapture = ({ layout, onComplete, onBack }: CameraCaptureProps) => {
         {/* Camera View */}
         <div className="lg:col-span-2">
           <div className="card-elegancia p-6 animate-scale-in">
-            <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+            <div className="relative aspect-video bg-black rounded-lg overflow-hidden touch-pan-y">
               <video
                 ref={videoRef}
                 autoPlay

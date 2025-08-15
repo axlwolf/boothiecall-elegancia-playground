@@ -66,10 +66,10 @@ const FinalResult = ({
   // Guard to ensure we only initialize once per sessionKey
   const initializedSessionKeyRef = useRef<string | null>(null);
 
-  // Check if any photos have GIF data
+  // Check if any photos have GIF data or sampled frames (iOS fallback)
   const hasGifData = useMemo(() => {
     return photos && Array.isArray(photos)
-      ? photos.some((photo) => photo.gifData)
+      ? photos.some((photo) => photo.gifData || (photo.gifFrames && photo.gifFrames.length > 0))
       : false;
   }, [photos]);
 
@@ -334,9 +334,51 @@ const FinalResult = ({
 
     setIsGeneratingGif(true);
     try {
-      // Convert video blobs to data URLs for gifshot
-      const gifDataUrls: string[] = [];
+      // Prefer frame-based GIF if any photo has sampled frames (iOS fallback)
+      const allFrames: string[] = [];
+      photos.forEach((photo) => {
+        if (photo.gifFrames && photo.gifFrames.length > 0) {
+          allFrames.push(...photo.gifFrames);
+        }
+      });
 
+      const targetWidth = 400;
+      const targetHeight =
+        layout && typeof layout.shots === 'number'
+          ? layout.shots === 1
+            ? 600
+            : layout.shots * 150 + 100
+          : 600;
+
+      if (allFrames.length > 0) {
+        gifshot.createGIF(
+          {
+            images: allFrames,
+            gifWidth: targetWidth,
+            gifHeight: targetHeight,
+            interval: 0.12, // ~8 fps
+            numFrames: allFrames.length,
+          },
+          (obj) => {
+            if (!obj.error) {
+              setGeneratedGifUrl(obj.image);
+              const link = document.createElement('a');
+              link.href = obj.image;
+              link.download = `boothiecall-gif-${layout?.id || 'unknown'}-${Date.now()}.gif`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            } else {
+              console.error('Error creating GIF from frames:', obj.error);
+            }
+            setIsGeneratingGif(false);
+          }
+        );
+        return;
+      }
+
+      // Fallback to video blobs path
+      const gifDataUrls: string[] = [];
       for (const photo of photos) {
         if (photo.gifData) {
           const url = URL.createObjectURL(photo.gifData);
@@ -345,53 +387,37 @@ const FinalResult = ({
       }
 
       if (gifDataUrls.length === 0) {
-        console.error("No GIF data found");
+        console.error('No GIF data found');
+        setIsGeneratingGif(false);
         return;
       }
 
-      // Create GIF using gifshot
       gifshot.createGIF(
         {
           videos: gifDataUrls,
-          gifWidth: 400,
-          gifHeight:
-            layout && typeof layout.shots === "number"
-              ? layout.shots === 1
-                ? 600
-                : layout.shots * 150 + 100
-              : 600,
+          gifWidth: targetWidth,
+          gifHeight: targetHeight,
           interval: 0.2,
-          numFrames: 10,
-          frameDuration: 0.5,
-          fontWeight: "bold",
-          fontSize: "24px",
-          fontFamily: "Cinzel",
-          fontColor: "#D8AE48",
-          textAlign: "center",
-          textBaseline: "middle",
+          numFrames: gifDataUrls.length,
         },
         (obj) => {
           if (!obj.error) {
             setGeneratedGifUrl(obj.image);
-            const link = document.createElement("a");
+            const link = document.createElement('a');
             link.href = obj.image;
-            link.download = `boothiecall-gif-${
-              layout?.id || "unknown"
-            }-${Date.now()}.gif`;
+            link.download = `boothiecall-gif-${layout?.id || 'unknown'}-${Date.now()}.gif`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
           } else {
-            console.error("Error creating GIF:", obj.error);
+            console.error('Error creating GIF from videos:', obj.error);
           }
-
-          // Clean up URLs
           gifDataUrls.forEach((url) => URL.revokeObjectURL(url));
           setIsGeneratingGif(false);
         }
       );
     } catch (error) {
-      console.error("Error generating GIF strip:", error);
+      console.error('Error generating GIF strip:', error);
       setIsGeneratingGif(false);
     }
   }, [hasGifData, layout, photos, setGeneratedGifUrl, setIsGeneratingGif]);
@@ -457,7 +483,7 @@ const FinalResult = ({
   }, [sessionKey, generatePhotoStrip, photos?.length, template?.id]);
 
   return (
-    <div className="container-elegancia py-8 min-h-screen">
+    <div className="container-elegancia py-8 min-h-screen h-svh safe-area-padding card-fixes overflow-hidden">
       {/* Header */}
       <div className="text-center mb-8 animate-fade-in">
         <h1 className="text-3xl md:text-4xl font-cinzel font-bold text-glow mb-2">

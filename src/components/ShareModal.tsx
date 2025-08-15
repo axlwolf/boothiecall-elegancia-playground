@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useShare } from '@/hooks/useShare';
+import { copyText } from '@/lib/clipboard';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -101,7 +102,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-gray-900 border-gray-700">
+      <DialogContent className="max-w-md bg-gray-900 border-gray-700 h-svh safe-area-padding card-fixes max-h-svh overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-cinzel text-gold-300 flex items-center gap-2">
             <Share2 className="w-5 h-5" />
@@ -188,9 +189,9 @@ const ShareModal: React.FC<ShareModalProps> = ({
             
             <div className="space-y-2">
               <Button
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  setCopySuccess('Link copied to clipboard!');
+                onClick={async () => {
+                  const result = await copyText(window.location.href);
+                  setCopySuccess(result.ok ? 'Link copied to clipboard!' : 'Unable to copy link.');
                   setTimeout(() => setCopySuccess(''), 3000);
                 }}
                 variant="ghost"
@@ -202,10 +203,10 @@ const ShareModal: React.FC<ShareModalProps> = ({
               </Button>
               
               <Button
-                onClick={() => {
+                onClick={async () => {
                   const shareText = `${description}\n\n${window.location.href}`;
-                  navigator.clipboard.writeText(shareText);
-                  setCopySuccess('Share text copied!');
+                  const result = await copyText(shareText);
+                  setCopySuccess(result.ok ? 'Share text copied!' : 'Unable to copy share text.');
                   setTimeout(() => setCopySuccess(''), 3000);
                 }}
                 variant="ghost"

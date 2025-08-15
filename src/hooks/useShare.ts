@@ -1,3 +1,4 @@
+import { copyText } from '@/lib/clipboard';
 import { useState } from 'react';
 
 export interface ShareOptions {
@@ -89,14 +90,11 @@ export const useShare = () => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         const shareText = `${options.text || 'Check out my photo from BoothieCall!'} ${options.url || window.location.href}`;
-        await navigator.clipboard.writeText(shareText);
-        return { 
-          success: true, 
-          method: 'clipboard-text', 
-          message: 'Share text copied to clipboard!' 
-        };
-      } catch (textError) {
-        console.warn('Text copy failed:', textError);
+        const result = await copyText(shareText);
+        if (result.ok) return { ok: true };
+        // fall through to other strategies on failure
+      } catch (err) {
+        // fall through to other strategies
       }
     }
     

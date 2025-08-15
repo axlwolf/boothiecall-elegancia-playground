@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import './styles/ios-fixes.css'
 import { swCleanup } from './lib/swCleanup'
 import { performanceMonitor } from './lib/performanceMonitor'
 
