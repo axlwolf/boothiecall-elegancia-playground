@@ -1,0 +1,151 @@
+services:
+  # Frontend React PWA
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: development
+    container_name: boothiecall-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tailwind.config.ts:/app/tailwind.config.ts
+      - ./postcss.config.js:/app/postcss.config.js
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./tsconfig.app.json:/app/tsconfig.app.json
+      - ./components.json:/app/components.json
+    environment:
+      - VITE_API_URL=http://localhost:8080/api/v1
+    depends_on:
+      - backend
+    networks:
+      - boothiecall-network
+
+  # Backend PHP API (Slim Framework 4)
+  backend:
+    build:
+      context: ./backend-php
+      dockerfile: Dockerfile
+    container_name: boothiecall-backend
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    volumes:
+      - ./backend-php/src:/var/www/html/src
+      - ./backend-php/config:/var/www/html/config
+      - ./backend-php/public:/var/www/html/public
+      - ./.env.docker:/var/www/html/.env
+      - uploads:/var/www/html/uploads
+      - logs:/var/www/html/logs
+    env_file:
+      - .env.docker
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-boothiecall}
+      - DB_USER=${DB_USER:-boothiecall}
+      - DB_PASS=${DB_PASS:-password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - APP_ENV=development
+      - APP_DEBUG=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - boothiecall-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: boothiecall-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-boothiecall}
+      MYSQL_USER: ${DB_USER:-boothiecall}
+      MYSQL_PASSWORD: ${DB_PASS:-password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend-php/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_ROOT_PASSWORD:-rootpassword}",
+        ]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+    networks:
+      - boothiecall-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: boothiecall-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - boothiecall-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # phpMyAdmin - Database Administration
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: boothiecall-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: ${DB_USER:-boothiecall}
+      PMA_PASSWORD: ${DB_PASS:-password}
+      UPLOAD_LIMIT: 50M
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - boothiecall-network
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads:
+    driver: local
+  logs:
+    driver: local
+
+networks:
+  boothiecall-network:
+    driver: bridge

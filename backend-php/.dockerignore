@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+!.env.example
+logs/*.log
+uploads/*
+cache/*
+temp/*
+Dockerfile
+*.md
+tests/
