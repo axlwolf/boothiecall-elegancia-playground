@@ -319,7 +319,7 @@ export class PrintOptimizationService {
    */
   private addCropMarks(
     ctx: CanvasRenderingContext2D,
-    dimensions: any,
+    dimensions: { bleedWidth: number; bleedHeight: number; canvasWidth: number; canvasHeight: number },
     settings: PrintSettings
   ): void {
     ctx.save();

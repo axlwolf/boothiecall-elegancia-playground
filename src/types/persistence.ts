@@ -58,7 +58,7 @@ export interface AdminTemplate {
   name: string;
   layoutType: '1shot' | '3shot' | '4shot' | '6shot';
   imageUrl: string;
-  frameMapping: any; // Frame positioning data
+  frameMapping: Record<string, unknown>; // Frame positioning data
   metadata: StorageMetadata;
   tenantId: string;
   isActive: boolean;
@@ -132,7 +132,7 @@ export interface SyncEvent {
   type: 'create' | 'update' | 'delete';
   entity: 'asset' | 'filter' | 'template' | 'user' | 'tenant' | 'format' | 'session';
   id: string;
-  data?: any;
+  data?: Record<string, unknown>;
   timestamp: string;
   source: 'main' | 'admin';
 }
@@ -147,15 +147,15 @@ export interface SyncStatus {
 export interface SyncConflict {
   id: string;
   entity: string;
-  localVersion: any;
-  remoteVersion: any;
+  localVersion: unknown;
+  remoteVersion: unknown;
   timestamp: string;
 }
 
 // Cache-related interfaces
 export interface CacheEntry {
   key: string;
-  data: any;
+  data: unknown;
   metadata: StorageMetadata;
   ttl: number;
   tags: string[];
@@ -196,7 +196,7 @@ export class PersistenceError extends Error {
   constructor(
     message: string,
     public code: string,
-    public details?: any
+    public details?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'PersistenceError';
@@ -204,13 +204,13 @@ export class PersistenceError extends Error {
 }
 
 export class QuotaExceededError extends PersistenceError {
-  constructor(storageType: string, details?: any) {
+  constructor(storageType: string, details?: Record<string, unknown>) {
     super(`Storage quota exceeded for ${storageType}`, 'QUOTA_EXCEEDED', details);
   }
 }
 
 export class SyncError extends PersistenceError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: Record<string, unknown>) {
     super(message, 'SYNC_ERROR', details);
   }
 }

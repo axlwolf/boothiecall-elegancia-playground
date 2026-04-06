@@ -371,8 +371,22 @@ export class BrowserCompatibilityService {
   private setupIntersectionObserverPolyfill(): void {
     // Simple polyfill for IntersectionObserver
     if (!('IntersectionObserver' in window)) {
-      (window as any).IntersectionObserver = class {
-        constructor(callback: any, options: any = {}) {
+      // Define a custom interface for the polyfill
+      interface PolyfillIntersectionObserver {
+        callback: IntersectionObserverCallback;
+        options: IntersectionObserverInit;
+        elements: Set<Element>;
+        observe(element: Element): void;
+        unobserve(element: Element): void;
+        disconnect(): void;
+      }
+
+      (window as any).IntersectionObserver = class implements PolyfillIntersectionObserver {
+        callback: IntersectionObserverCallback;
+        options: IntersectionObserverInit;
+        elements: Set<Element>;
+
+        constructor(callback: IntersectionObserverCallback, options: IntersectionObserverInit = {}) {
           this.callback = callback;
           this.options = options;
           this.elements = new Set();
@@ -385,8 +399,12 @@ export class BrowserCompatibilityService {
             this.callback([{
               target: element,
               isIntersecting: true,
-              intersectionRatio: 1
-            }]);
+              intersectionRatio: 1,
+              boundingClientRect: element.getBoundingClientRect(),
+              intersectionRect: element.getBoundingClientRect(),
+              rootBounds: null,
+              time: performance.now()
+            }], this as unknown as IntersectionObserver);
           }, 100);
         }
 

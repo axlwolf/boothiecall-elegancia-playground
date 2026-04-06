@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Template } from '@/types/templates';
 import { loadTemplatesByLayout, generateTemplatePreview } from '@/lib/templateService';
 
@@ -22,13 +23,13 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
-  
+
   const templatesPerPage = 6;
   const totalPages = Math.ceil(templates.length / templatesPerPage);
-  const currentTemplates = templates.slice(
+  const currentTemplates = useMemo(() => templates.slice(
     currentPage * templatesPerPage,
     (currentPage + 1) * templatesPerPage
-  );
+  ), [templates, currentPage]);
 
   // Load templates for the selected layout
   useEffect(() => {
@@ -37,14 +38,14 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
       try {
         const layoutTemplates = await loadTemplatesByLayout(layout.id);
         setTemplates(layoutTemplates);
-        
+
         // Generate preview URLs for each template
         const previews: Record<string, string> = {};
         layoutTemplates.forEach(template => {
           previews[template.id] = generateTemplatePreview(template);
         });
         setPreviewUrls(previews);
-        
+
         // Auto-select first template
         if (layoutTemplates.length > 0) {
           setSelectedTemplate(layoutTemplates[0]);
@@ -59,33 +60,33 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
     loadTemplates();
   }, [layout.id]);
 
-  const handleTemplateSelect = (template: Template) => {
+  const handleTemplateSelect = useCallback((template: Template) => {
     setSelectedTemplate(template);
-  };
+  }, []);
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     if (selectedTemplate) {
       onSelectDesign(selectedTemplate);
     }
-  };
+  }, [selectedTemplate, onSelectDesign]);
 
-  const nextPage = () => {
+  const nextPage = useCallback(() => {
     if (currentPage < totalPages - 1) {
       setCurrentPage(prev => prev + 1);
     }
-  };
+  }, [currentPage, totalPages]);
 
-  const prevPage = () => {
+  const prevPage = useCallback(() => {
     if (currentPage > 0) {
       setCurrentPage(prev => prev - 1);
     }
-  };
+  }, [currentPage]);
 
   if (isLoading) {
     return (
       <div className="container-elegancia py-8 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Palette className="w-12 h-12 mx-auto mb-4 text-primary animate-pulse" />
+          <LoadingSpinner size="xl" className="mx-auto mb-4" />
           <p className="text-lg font-montserrat text-muted-foreground">
             Loading design templates...
           </p>
@@ -119,11 +120,10 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
             {currentTemplates.map((template, index) => (
               <div
                 key={template.id}
-                className={`card-elegancia p-4 cursor-pointer transition-all duration-300 animate-scale-in ${
-                  selectedTemplate?.id === template.id 
-                    ? 'border-primary shadow-glow scale-105' 
-                    : 'hover:border-gold-400/50'
-                }`}
+                className={`card-elegancia p-4 cursor-pointer transition-all duration-300 animate-scale-in ${selectedTemplate?.id === template.id
+                  ? 'border-primary shadow-glow scale-105'
+                  : 'hover:border-gold-400/50'
+                  }`}
                 onClick={() => handleTemplateSelect(template)}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -141,7 +141,7 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
                     </div>
                   )}
                 </div>
-                
+
                 {/* Template Info */}
                 <h3 className="font-cinzel font-semibold text-sm text-center mb-1">
                   {template.name}
@@ -165,11 +165,11 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              
+
               <span className="text-sm font-montserrat text-muted-foreground">
                 Page {currentPage + 1} of {totalPages}
               </span>
-              
+
               <Button
                 onClick={nextPage}
                 disabled={currentPage === totalPages - 1}
@@ -191,7 +191,7 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
                 <h3 className="font-cinzel font-semibold text-xl mb-4 text-center">
                   Selected Design
                 </h3>
-                
+
                 <div className="aspect-[3/4] bg-gradient-card rounded-lg mb-4 overflow-hidden border border-primary/30">
                   <img
                     src={previewUrls[selectedTemplate.id]}
@@ -199,14 +199,14 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
                     className="w-full h-full object-cover"
                   />
                 </div>
-                
+
                 <h4 className="font-cinzel font-bold text-lg text-primary mb-2">
                   {selectedTemplate.name}
                 </h4>
                 <p className="text-sm text-muted-foreground font-montserrat mb-4">
                   {selectedTemplate.description}
                 </p>
-                
+
                 <div className="space-y-2 text-xs font-montserrat">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Layout:</span>
@@ -239,7 +239,7 @@ const DesignSelection = ({ layout, onSelectDesign, onBack }: DesignSelectionProp
         >
           Back to Layouts
         </Button>
-        
+
         <div className="text-center">
           <p className="text-sm text-muted-foreground font-montserrat">
             {selectedTemplate ? 'Continue when ready' : 'Select a design to continue'}

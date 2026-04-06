@@ -19,6 +19,9 @@ export interface PhotoMetadata {
     shadows?: number;
   };
   editedAt?: string;
+  rotation?: number;
+  isFlippedH?: boolean;
+  isFlippedV?: boolean;
   originalSize?: { width: number; height: number };
   compressedSize?: { width: number; height: number };
   compressionRatio?: number;
