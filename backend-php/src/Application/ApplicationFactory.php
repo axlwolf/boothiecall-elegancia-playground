@@ -32,14 +32,14 @@ class ApplicationFactory
         AppFactory::setContainer($container);
         $app = AppFactory::create();
         
-        // Add middleware
+        // Add error handling (Must be added before middleware so it's inner in the stack, allowing Cors to wrap it)
+        self::addErrorHandling($app, $settings);
+        
+        // Add middleware (Cors is added here, so it will be outer)
         self::addMiddleware($app, $container);
         
         // Register routes
         self::registerRoutes($app, $container);
-        
-        // Add error handling
-        self::addErrorHandling($app, $settings);
         
         return $app;
     }
@@ -72,6 +72,15 @@ class ApplicationFactory
                 
                 return $pdo;
             },
+
+            \BoothieCall\Api\Controllers\AuthController::class => function(ContainerInterface $c) use ($settings) {
+                return new \BoothieCall\Api\Controllers\AuthController(
+                    $c->get(PDO::class),
+                    $c->get(LoggerInterface::class),
+                    $settings['jwt'],
+                    $settings['security']
+                );
+            },
         ]);
         
         return $containerBuilder->build();
@@ -81,15 +90,6 @@ class ApplicationFactory
     {
         $settings = $container->get('settings');
         $logger = $container->get(LoggerInterface::class);
-        
-        // Add error middleware first
-        $app->add(new ErrorMiddleware($logger));
-        
-        // Add CORS middleware
-        $app->add(new CorsMiddleware($settings['cors']));
-        
-        // Add rate limiting middleware
-        $app->add(new RateLimitMiddleware($settings['rate_limit']));
         
         // Add tenant middleware
         $app->add(new TenantMiddleware($settings['tenant']));
@@ -102,6 +102,12 @@ class ApplicationFactory
         
         // Add routing middleware
         $app->addRoutingMiddleware();
+
+        // Add rate limiting middleware
+        $app->add(new RateLimitMiddleware($settings['rate_limit']));
+
+        // Add CORS middleware (Added last to run first - LIFO)
+        $app->add(new CorsMiddleware($settings['cors']));
     }
     
     private static function registerRoutes(App $app, ContainerInterface $container): void
