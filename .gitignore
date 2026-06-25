@@ -38,3 +38,15 @@ ERRORS_REFERENCE.md
 .kiro/
 .clinerules/
 flutter-boothiecall-context/
+
+# Generated artifacts
+coverage/
+test-results/
+playwright-report/
+verification/
+tests-examples/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
