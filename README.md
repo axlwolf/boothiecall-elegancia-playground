@@ -5,6 +5,7 @@ A sophisticated web-based photobooth application featuring the elegant "Eleganci
 ## 🌟 Features
 
 ### 📸 **Photo & GIF Capture**
+
 - **Real-time camera integration** with high-quality photo capture
 - **Animated GIF creation** - captures motion during photo sessions
 - **Multiple shot layouts**: 1, 3, 4, or 6 photos per strip
@@ -14,6 +15,7 @@ A sophisticated web-based photobooth application featuring the elegant "Eleganci
 - **Dual download options**: Photo strips (PNG) or animated GIF strips
 
 ### 🎨 **Design Customization**
+
 - **Multiple design templates** for each layout type
 - **Paginated design selection** with visual preview
 - **Frame mapping system** for precise photo placement
@@ -21,6 +23,7 @@ A sophisticated web-based photobooth application featuring the elegant "Eleganci
 - **Smart cropping** with aspect ratio preservation
 
 ### 🎭 **Photo Filters**
+
 - **15+ filter effects**: Noir, Vintage, Glam, Pencil Sketch, Extra Sharp, Warm, Cool, Faded, Black & White, Sepia, Brightness, Contrast, Blur, Invert, and more
 - **Individual photo filtering** - apply different filters to each photo
 - **"All Photos" option** - apply the same filter to all photos at once
@@ -28,6 +31,7 @@ A sophisticated web-based photobooth application featuring the elegant "Eleganci
 - **Paginated filter selection** - browse through all available filters
 
 ### 🌈 **Elegancia Nocturna Design System**
+
 - **Luxury dark theme** with sophisticated gold accents (#D8AE48)
 - **Premium typography** using Cinzel (headings) and Montserrat (body)
 - **Elegant cursor design** with custom golden styling
@@ -36,6 +40,7 @@ A sophisticated web-based photobooth application featuring the elegant "Eleganci
 - **Sophisticated color palette** optimized for luxury aesthetics
 
 ### 🖼️ **Photo Processing**
+
 - **Smart image cropping** with aspect ratio preservation
 - **Frame overlay system** with precise positioning
 - **Border radius support** for rounded photo frames
@@ -43,6 +48,7 @@ A sophisticated web-based photobooth application featuring the elegant "Eleganci
 - **GIF compositing** with frame overlays for animated strips
 
 ### 📱 **User Experience**
+
 - **Beautiful landing page** with animated elements and shooting star cursor
 - **Step-by-step workflow** with clear navigation
 - **Responsive interface** optimized for all screen sizes
@@ -53,23 +59,27 @@ A sophisticated web-based photobooth application featuring the elegant "Eleganci
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (version 16 or higher)
 - npm or yarn package manager
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/axlwolf/boothiecall-elegancia-playground.git
    cd boothiecall-elegancia-playground
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -89,32 +99,30 @@ The built files will be in the `dist` directory.
 
 ```
 boothiecall-elegancia-playground/
-├── public/
-│   ├── favicon.ico         # App favicon
-│   ├── placeholder.svg      # Placeholder image
-│   └── robots.txt          # SEO robots file
-├── src/
-│   ├── assets/             # Static assets
-│   │   └── hero-gallery.jpg # Gallery background image
-│   ├── components/
-│   │   ├── AppLayout.tsx       # Main layout wrapper with shooting star
-│   │   ├── CameraCapture.tsx   # Camera capture logic with GIF support
-│   │   ├── FilterSelection.tsx # Photo filter options with "All Photos"
-│   │   ├── FinalResult.tsx     # Final photo strip display
-│   │   ├── Landing.tsx         # Welcome page with animations
-│   │   ├── LayoutSelection.tsx # Layout selection interface
-│   │   ├── Photobooth.tsx      # Main photobooth logic
-│   │   └── ui/                 # shadcn UI components
-│   ├── App.tsx            # Main application component
-│   └── main.tsx           # Application entry point
-├── package.json           # Dependencies and scripts
-├── tailwind.config.ts     # Tailwind CSS configuration
-└── vite.config.ts         # Vite build configuration
+├── src/                    # React frontend source
+│   ├── admin/              # Admin panel (dashboard, CRUD)
+│   ├── components/         # Main app components
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Services and utilities
+│   ├── types/              # TypeScript interfaces
+│   └── tests/              # Unit tests (Vitest)
+├── backend-php/            # PHP API (Slim Framework 4)
+│   ├── src/Controllers/    # 6 API controllers
+│   ├── src/Middleware/     # 6 middleware classes
+│   ├── src/Routes/         # Route definitions
+│   ├── database/           # MySQL schema
+│   └── public/             # Entry point (index.php)
+├── docs/                   # Technical documentation
+├── tests/                  # E2E tests (Playwright)
+├── scripts/                # Utility scripts
+├── public/                 # Static assets (icons, fonts, images)
+└── package.json            # Frontend dependencies
 ```
 
 ## 🎯 How It Works
 
 ### 1. **Landing Page**
+
 - Elegant BoothieCall branding with premium logo display
 - Gallery background collage showcasing photo examples
 - Sophisticated Elegancia Nocturna dark theme with gold accents
@@ -122,15 +130,17 @@ boothiecall-elegancia-playground/
 - "Start Playground" button to begin the photobooth experience
 
 ### 2. **Layout Selection**
+
 - Choose from 4 different photo strip layouts:
   - **1 Shot**: Single photo layout
   - **3 Shot**: Vertical 3-photo strip
-  - **4 Shot**: Vertical 4-photo strip  
+  - **4 Shot**: Vertical 4-photo strip
   - **6 Shot**: 2x3 grid layout
 - Visual preview of each layout option
 - Responsive grid layout for mobile devices
 
 ### 3. **Photo Capture**
+
 - Camera access with real-time preview
 - Countdown timer with visual feedback
 - Automatic photo capture after countdown
@@ -140,6 +150,7 @@ boothiecall-elegancia-playground/
 - Theme-aware camera interface
 
 ### 4. **Filter Selection**
+
 - **15+ filter effects** with real-time preview
 - **Individual photo filtering** - apply different filters to each photo
 - **"All Photos" option** - apply the same filter to all photos at once
@@ -147,6 +158,7 @@ boothiecall-elegancia-playground/
 - **Smart highlighting** - shows which photos have which filters
 
 ### 5. **Design Selection**
+
 - Multiple available design templates for each layout
 - Browse through available design templates
 - Paginated interface with visual preview
@@ -154,6 +166,7 @@ boothiecall-elegancia-playground/
 - Theme-aware design cards
 
 ### 6. **Download Options**
+
 - **Photo Strip (PNG)**: Static photo strip with selected design
 - **GIF Strip (Animated)**: Animated strip with captured GIFs
 - Automatic photo positioning using frame mappings
@@ -163,6 +176,7 @@ boothiecall-elegancia-playground/
 ## 🛠️ Technical Details
 
 ### **Core Technologies**
+
 - **React 18** - Modern React with hooks and context
 - **TypeScript** - Type safety and better developer experience
 - **Vite** - Fast build tool and dev server
@@ -173,6 +187,7 @@ boothiecall-elegancia-playground/
 - **Google Fonts** - Cinzel and Montserrat for premium typography
 
 ### **Key Dependencies**
+
 - `gifshot` - GIF creation capabilities
 - `react-router-dom` - Application routing
 - `tailwindcss-animate` - Animation utilities
@@ -180,6 +195,7 @@ boothiecall-elegancia-playground/
 - `class-variance-authority` - Component style variants
 
 ### **Elegancia Nocturna Design System**
+
 - **Sophisticated color palette** with luxury dark backgrounds and gold accents
 - **Premium typography system** with elegant serif headings
 - **Custom Tailwind configuration** with brand-specific colors and spacing
@@ -187,6 +203,7 @@ boothiecall-elegancia-playground/
 - **Refined cursor experience** with subtle gold styling
 
 ### **Filter System**
+
 - **CSS filter effects** applied in real-time
 - **Individual photo targeting** with smart UI
 - **"All Photos" bulk application** for efficiency
@@ -194,6 +211,7 @@ boothiecall-elegancia-playground/
 - **Visual feedback** showing applied filters
 
 ### **GIF System**
+
 - **MediaRecorder integration** for motion capture
 - **Frame-by-frame processing**
 - **GIF compositing** with design overlays
@@ -201,6 +219,7 @@ boothiecall-elegancia-playground/
 - **Cross-browser compatibility**
 
 ### **Responsive Design**
+
 - Mobile-first approach with Tailwind CSS
 - Adaptive layouts for different screen sizes
 - Touch-friendly interface elements
@@ -210,22 +229,26 @@ boothiecall-elegancia-playground/
 ## 🎨 Customization
 
 ### **Adding New Designs**
+
 1. Add design images to `src/assets/designs/`
 2. Update design templates in the Photobooth component
 3. Add frame mapping in the appropriate component
 4. Test positioning and adjust coordinates
 
 ### **Adding New Filters**
+
 1. Add filter definition to the filters array in FilterSelection component
 2. Test filter effects on different photo types
 3. Ensure cross-browser compatibility
 
 ### **Modifying Layouts**
+
 - Edit the LayoutSelection component to add new layout options
 - Update preview images in assets directory
 - Adjust frame mappings accordingly
 
 ### **Theme Customization**
+
 - Modify theme colors in tailwind.config.ts
 - Update CSS animations in global styles
 - Customize shooting star behavior in AppLayout component
@@ -278,25 +301,28 @@ This project is licensed under the MIT License.
 If you're using multiple GitHub accounts and encounter authentication issues when pushing to this repository, follow these steps:
 
 1. **Check your SSH configuration**:
+
    ```bash
    # View your SSH config
    cat ~/.ssh/config
    ```
 
 2. **Configure SSH for multiple accounts** (if not already done):
+
    ```bash
    # Edit SSH config
    nano ~/.ssh/config
    ```
-   
+
    Add configuration like this:
+
    ```
    # Main account
    Host github.com
        HostName github.com
        User git
        IdentityFile ~/.ssh/id_rsa
-   
+
    # Secondary account (axlwolf)
    Host github-axlwolf
        HostName github.com
@@ -305,10 +331,11 @@ If you're using multiple GitHub accounts and encounter authentication issues whe
    ```
 
 3. **Set the correct remote URL for this repository**:
+
    ```bash
    # Remove existing remote
    git remote remove origin
-   
+
    # Add remote with the correct host alias
    git remote add origin git@github-axlwolf:axlwolf/boothiecall-elegancia-playground.git
    ```

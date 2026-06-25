@@ -9,10 +9,34 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Pendiente
 
-- Optimización de rendimiento e imágenes
-- Soporte para Progressive Web App (PWA)
-- Compatibilidad cross-browser mejorada
+- Integración Google Analytics 4 (ver docs/GOOGLE_ANALYTICS_ROADMAP.md)
+- Dockerización del stack de desarrollo
 - Soporte multi-idioma (i18n)
+
+## [2.1.0] - 2026-06-25
+
+### Removido
+
+- **Backend Node.js abandonado** (`backend/`) - Esqueleto nunca implementado, ~200MB de peso muerto
+- **10 componentes UI no usados** - calendar, carousel, command, context-menu, hover-card, input-otp, menubar, navigation-menu, resizable, sidebar
+- **5 dependencias npm innecesarias** - embla-carousel-react, cmdk, input-otp, react-resizable-panels, react-day-picker
+- **3 componentes huérfanos** - ImageEditor, CameraTest, CachePreloader (nunca importados)
+- **300+ archivos de coverage HTML** - Reportes generados que nunca debieron ser commiteados
+- **Documentación obsoleta** - supabase_schemas.sql (Supabase abandonado), backend_architecture.md (Node.js abandonado)
+- **Archivos raíz innecesarios** - test-basic.html, test-permissions.php, yarn.lock, ripperFive.mdc, EFFICIENCY_REPORT.md
+
+### Cambiado
+
+- Documentación técnica consolidada en `docs/` (ERRORS_REFERENCE, GODADDY_DEPLOYMENT, PROJECT_STATUS_FINAL, TEST_STATUS)
+- `.gitignore` optimizado y limpio (coverage, test-results, .kiro, .clinerules)
+- Project structure actualizada en README.md
+- `generate-icons.sh` movido a `scripts/`
+- `docs/implementation_plan.md` marcado como referencia histórica (plan era para Node.js)
+
+### Agregado
+
+- `docs/CODE_AUDIT_REPORT.md` - Auditoría completa del código
+- `docs/GOOGLE_ANALYTICS_ROADMAP.md` - Plan de implementación GA4
 - Integración con almacenamiento en la nube
 - Persistencia frontend (localStorage/IndexedDB/Cache API)
 - Integración backend y API completa
@@ -143,7 +167,6 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 ### Agregado
 
 - **Fundación Core - Sistema de Diseño Elegancia Nocturna**
-
   - Tema oscuro de lujo con acentos dorados (#D8AE48)
   - Tipografía premium (Cinzel + Montserrat)
   - Animaciones CSS personalizadas y transiciones
@@ -151,7 +174,6 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
   - Paleta de colores sofisticada y gradientes
 
 - **Página de Inicio**
-
   - Sección hero animada con cursor de estrella fugaz
   - Fondo de collage de galería
   - Branding elegante y navegación
