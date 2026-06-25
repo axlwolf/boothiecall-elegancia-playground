@@ -19,6 +19,7 @@ services:
       - ./tsconfig.json:/app/tsconfig.json
       - ./tsconfig.app.json:/app/tsconfig.app.json
       - ./components.json:/app/components.json
+      - /app/node_modules
     environment:
       - VITE_API_URL=http://localhost:8080/api/v1
     depends_on:
@@ -82,7 +83,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./backend-php/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     healthcheck:
       test:
         [
