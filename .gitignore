@@ -1,52 +1,47 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Dependencies
+node_modules/
+backend-php/vendor/
 
-node_modules
-dist
-dist-ssr
+# Build output
+dist/
+dist-ssr/
+
+# Environment files
+.env
+.env.local
+.env.*.local
 *.local
 
-# Editor directories and files
+# Logs
+logs/
+*.log
+
+# Generated test/coverage artifacts
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+backend-php/.phpunit.cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-CLAUDE.md
-GEMINI.md
-ERRORS_REFERENCE.md
-.gemini/
-
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-
-# AI/IDE local config
+# AI/IDE local config (personal, not shared)
 .kiro/
 .clinerules/
-flutter-boothiecall-context/
+.gemini/
 
-# Generated artifacts
-coverage/
-test-results/
-playwright-report/
-verification/
-tests-examples/
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
+# Docker local data
+.env.docker
