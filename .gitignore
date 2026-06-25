@@ -33,3 +33,8 @@ ERRORS_REFERENCE.md
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# AI/IDE local config
+.kiro/
+.clinerules/
+flutter-boothiecall-context/
