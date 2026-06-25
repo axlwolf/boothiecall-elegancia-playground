@@ -26,6 +26,22 @@ class Routes
 
     public function register(App $app): void
     {
+        // Root route - API info
+        $app->get('/', function ($request, $response) {
+            $response->getBody()->write(json_encode([
+                'name' => 'BoothieCall Elegancia API',
+                'version' => '1.0.0',
+                'status' => 'running',
+                'endpoints' => [
+                    'health' => '/health',
+                    'api' => '/api/v1',
+                    'auth' => '/api/v1/auth/login',
+                    'docs' => 'https://github.com/axlwolf/boothiecall-elegancia-playground'
+                ]
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+        });
+
         // Health check
         $app->get('/health', function ($request, $response) {
             $response->getBody()->write(json_encode([

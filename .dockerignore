@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.env*
+!.env.production
+backend/
+backend-php/
+coverage/
+test-results/
+tests-examples/
+*.md
+.kiro/
+.gemini/
+.github/

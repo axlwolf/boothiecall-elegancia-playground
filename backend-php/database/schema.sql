@@ -217,7 +217,7 @@ VALUES (
     'admin', 
     'Admin', 
     'User', 
-    '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqyc6/8.ykzxkMy8Ug8mi4S', -- admin123
+    '$2y$12$PgxmtjmbistaEm1wjB8xRORtgs7ONt0Cv/3Bzk5zc2KeQe4VCYC/y', -- admin123
     'SUPER_ADMIN', 
     'default-tenant-id'
 );

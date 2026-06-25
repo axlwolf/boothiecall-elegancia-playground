@@ -55,7 +55,7 @@ export interface AdminPreferences {
     };
     dashboard: {
       defaultView: string;
-      widgetLayout: any[];
+      widgetLayout: Record<string, unknown>[];
       refreshInterval: number;
     };
   };
@@ -70,8 +70,8 @@ export interface AdminAuditLog {
   entity: string;
   entityId: string;
   changes: {
-    before?: any;
-    after?: any;
+    before?: Record<string, unknown>;
+    after?: Record<string, unknown>;
   };
   ipAddress: string;
   userAgent: string;
@@ -97,7 +97,7 @@ export interface CachedTemplate {
   name: string;
   layoutType: string;
   imageBlob: Blob;
-  frameMapping: any;
+  frameMapping: Record<string, unknown>;
   cachedAt: string;
   metadata: StorageMetadata;
 }
@@ -259,7 +259,7 @@ export interface AdminNotification {
   type: 'info' | 'warning' | 'error' | 'success';
   title: string;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   read: boolean;
   createdAt: string;
   expiresAt?: string;

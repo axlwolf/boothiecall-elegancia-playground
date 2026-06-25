@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { ArrowLeft, Save, RotateCw, RotateCcw, FlipHorizontal, FlipVertical, Crop, Sliders, Palette, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -10,6 +10,7 @@ import { CapturedPhoto } from '@/types/layout';
 import { ImageAdjustments, defaultAdjustments } from '@/lib/imageProcessing';
 import { FilterEngine } from '@/lib/filterEngine';
 import { enhancedFilters, FilterCategory, EnhancedFilter } from '@/types/filters';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 interface PhotoEditorProps {
   photo: CapturedPhoto;
@@ -27,43 +28,43 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
   const [previewUrl, setPreviewUrl] = useState(photo.dataUrl);
   const [beforeAfterMode, setBeforeAfterMode] = useState(false);
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<FilterCategory>('basic');
-  
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const filterEngine = FilterEngine.getInstance();
 
   // Group filters by category
-  const filtersByCategory = enhancedFilters.reduce((acc, filter) => {
+  const filtersByCategory = useMemo(() => enhancedFilters.reduce((acc, filter) => {
     if (!acc[filter.category]) {
       acc[filter.category] = [];
     }
     acc[filter.category].push(filter);
     return acc;
-  }, {} as Record<FilterCategory, EnhancedFilter[]>);
+  }, {} as Record<FilterCategory, EnhancedFilter[]>), []);
 
   // Update preview when any parameter changes
   const updatePreview = useCallback(async () => {
     if (isProcessing) return;
-    
+
     setIsProcessing(true);
     try {
       let processedUrl = photo.dataUrl;
-      
+
       // Apply adjustments first
       if (Object.values(adjustments).some(val => val !== 0)) {
         processedUrl = await filterEngine.applyImageAdjustments(processedUrl, adjustments);
       }
-      
+
       // Apply filter
       const filter = enhancedFilters.find(f => f.id === selectedFilter);
       if (filter && filter.id !== 'none') {
         processedUrl = await filterEngine.applyFilter(processedUrl, filter);
       }
-      
+
       // Apply transformations
       if (rotation !== 0 || isFlippedH || isFlippedV) {
         processedUrl = await applyTransformations(processedUrl);
       }
-      
+
       setPreviewUrl(processedUrl);
     } catch (error) {
       console.error('Preview update failed:', error);
@@ -78,39 +79,39 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
     return () => clearTimeout(timer);
   }, [updatePreview]);
 
-  const handleAdjustmentChange = (key: keyof ImageAdjustments, value: number[]) => {
+  const handleAdjustmentChange = useCallback((key: keyof ImageAdjustments, value: number[]) => {
     setAdjustments(prev => ({
       ...prev,
       [key]: value[0]
     }));
-  };
+  }, []);
 
-  const handleRotate = (degrees: number) => {
+  const handleRotate = useCallback((degrees: number) => {
     setRotation(prev => (prev + degrees) % 360);
-  };
+  }, []);
 
-  const handleFlip = (direction: 'horizontal' | 'vertical') => {
+  const handleFlip = useCallback((direction: 'horizontal' | 'vertical') => {
     if (direction === 'horizontal') {
       setIsFlippedH(prev => !prev);
     } else {
       setIsFlippedV(prev => !prev);
     }
-  };
+  }, []);
 
-  const handleFilterSelect = (filterId: string) => {
+  const handleFilterSelect = useCallback((filterId: string) => {
     setSelectedFilter(filterId);
-  };
+  }, []);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setAdjustments(defaultAdjustments);
     setRotation(0);
     setIsFlippedH(false);
     setIsFlippedV(false);
     setSelectedFilter('none');
     setPreviewUrl(photo.dataUrl);
-  };
+  }, [photo.dataUrl]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setIsProcessing(true);
     try {
       const editedPhoto: CapturedPhoto = {
@@ -126,14 +127,14 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
           editedAt: new Date().toISOString()
         }
       };
-      
+
       onSave(editedPhoto);
     } catch (error) {
       console.error('Save failed:', error);
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [photo, previewUrl, adjustments, rotation, isFlippedH, isFlippedV, selectedFilter, onSave]);
 
   const applyTransformations = useCallback(async (inputUrl: string): Promise<string> => {
     return new Promise((resolve) => {
@@ -142,12 +143,12 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d')!;
-        
+
         // Calculate final dimensions considering rotation
         const isRotated90 = Math.abs(rotation % 180) === 90;
         canvas.width = isRotated90 ? img.height : img.width;
         canvas.height = isRotated90 ? img.width : img.height;
-        
+
         // Apply transformations
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -155,25 +156,25 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
         ctx.scale(isFlippedH ? -1 : 1, isFlippedV ? -1 : 1);
         ctx.drawImage(img, -img.width / 2, -img.height / 2);
         ctx.restore();
-        
+
         resolve(canvas.toDataURL('image/png', 0.9));
       };
       img.src = inputUrl;
     });
   }, [rotation, isFlippedH, isFlippedV]);
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     const link = document.createElement('a');
     link.download = `edited-photo-${Date.now()}.png`;
     link.href = previewUrl;
     link.click();
-  };
+  }, [previewUrl]);
 
   const getFilterStyle = (filter: EnhancedFilter) => {
     return filter.cssFilter ? { filter: filter.cssFilter } : {};
   };
 
-  const adjustmentSliders = [
+  const adjustmentSliders = useMemo(() => [
     { key: 'brightness' as keyof ImageAdjustments, label: 'Brightness', min: -100, max: 100, step: 1 },
     { key: 'contrast' as keyof ImageAdjustments, label: 'Contrast', min: -100, max: 100, step: 1 },
     { key: 'saturation' as keyof ImageAdjustments, label: 'Saturation', min: -100, max: 100, step: 1 },
@@ -181,9 +182,9 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
     { key: 'exposure' as keyof ImageAdjustments, label: 'Exposure', min: -2, max: 2, step: 0.1 },
     { key: 'highlights' as keyof ImageAdjustments, label: 'Highlights', min: -100, max: 100, step: 1 },
     { key: 'shadows' as keyof ImageAdjustments, label: 'Shadows', min: -100, max: 100, step: 1 }
-  ];
+  ], []);
 
-  const currentFilters = filtersByCategory[selectedFilterCategory] || [];
+  const currentFilters = useMemo(() => filtersByCategory[selectedFilterCategory] || [], [filtersByCategory, selectedFilterCategory]);
 
   return (
     <div className="container-elegancia py-8 min-h-screen">
@@ -228,12 +229,12 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
             </CardHeader>
             <CardContent>
               <div className="relative bg-gradient-card rounded-lg p-4 min-h-[500px] flex items-center justify-center">
-                {isProcessing && (
-                  <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center z-10">
-                    <div className="text-white font-montserrat">Processing...</div>
-                  </div>
-                )}
-                
+                <LoadingOverlay
+                  isLoading={isProcessing}
+                  message="Processing..."
+                  className="rounded-lg"
+                />
+
                 {beforeAfterMode ? (
                   <div className="w-full max-w-2xl relative">
                     {/* Before/After split view */}
@@ -358,11 +359,10 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
                     {/* None option */}
                     <div
                       onClick={() => handleFilterSelect('none')}
-                      className={`cursor-pointer p-2 rounded-lg border transition-colors ${
-                        selectedFilter === 'none'
-                          ? 'border-gold-500 bg-gold-500/10'
-                          : 'border-gray-600 hover:border-gray-500'
-                      }`}
+                      className={`cursor-pointer p-2 rounded-lg border transition-colors ${selectedFilter === 'none'
+                        ? 'border-gold-500 bg-gold-500/10'
+                        : 'border-gray-600 hover:border-gray-500'
+                        }`}
                     >
                       <div className="aspect-square mb-2 bg-gray-700 rounded overflow-hidden">
                         <img
@@ -381,11 +381,10 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
                       <div
                         key={filter.id}
                         onClick={() => handleFilterSelect(filter.id)}
-                        className={`cursor-pointer p-2 rounded-lg border transition-colors ${
-                          selectedFilter === filter.id
-                            ? 'border-gold-500 bg-gold-500/10'
-                            : 'border-gray-600 hover:border-gray-500'
-                        }`}
+                        className={`cursor-pointer p-2 rounded-lg border transition-colors ${selectedFilter === filter.id
+                          ? 'border-gold-500 bg-gold-500/10'
+                          : 'border-gray-600 hover:border-gray-500'
+                          }`}
                       >
                         <div className="aspect-square mb-2 bg-gray-700 rounded overflow-hidden">
                           <img
@@ -476,7 +475,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
                 <Save className="w-4 h-4 mr-2" />
                 {isProcessing ? 'Processing...' : 'Save Changes'}
               </Button>
-              
+
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={handleReset}
@@ -486,7 +485,7 @@ const PhotoEditor: React.FC<PhotoEditorProps> = ({ photo, onSave, onCancel }) =>
                 >
                   Reset All
                 </Button>
-                
+
                 <Button
                   onClick={onCancel}
                   variant="outline"

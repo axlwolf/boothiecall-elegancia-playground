@@ -87,7 +87,7 @@ export const useLazyLoading = () => {
     url: string,
     type: 'image' | 'template' | 'asset' | 'font',
     element?: HTMLElement,
-    options?: any
+    options?: Record<string, unknown>
   ): LoadableResource => {
     const resource = lazyLoadingService.registerResource(id, url, type, element, options);
     
@@ -174,7 +174,7 @@ export const usePerformanceMonitoring = () => {
     return performanceOptimizer.generatePerformanceReport();
   }, []);
 
-  const trackMemoryUsage = useCallback((key: string, obj: any) => {
+  const trackMemoryUsage = useCallback((key: string, obj: object) => {
     performanceOptimizer.registerForMemoryTracking(key, obj);
   }, []);
 

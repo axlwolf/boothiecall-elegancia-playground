@@ -14,7 +14,7 @@ const SYNC_STORAGE_KEY = 'boothie-sync-status';
 const CONFLICT_STORAGE_KEY = 'boothie-sync-conflicts';
 
 export type SyncEventHandler = (event: SyncEvent) => void;
-export type ConflictResolver = (conflict: SyncConflict) => Promise<any>;
+export type ConflictResolver = (conflict: SyncConflict) => Promise<unknown>;
 
 export class SyncService {
   private static instance: SyncService;
@@ -194,7 +194,7 @@ export class SyncService {
     type: SyncEvent['type'],
     entity: SyncEvent['entity'],
     id: string,
-    data?: any,
+    data?: Record<string, unknown>,
     source: 'main' | 'admin' = 'main'
   ): Promise<void> {
     const event: SyncEvent = {
@@ -219,7 +219,7 @@ export class SyncService {
   /**
    * Resolve a sync conflict
    */
-  async resolveConflict(conflict: SyncConflict): Promise<any> {
+  async resolveConflict(conflict: SyncConflict): Promise<unknown> {
     const resolver = this.conflictResolvers.get(conflict.entity);
     
     if (resolver) {

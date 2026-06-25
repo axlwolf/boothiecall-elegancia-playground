@@ -262,7 +262,7 @@ export class LazyLoadingService {
       const content = await response.text();
       
       // Store template content for later use
-      (resource as any).content = content;
+      (resource as LoadableResource & { content: string }).content = content;
       
       clearTimeout(timeout);
       resolve();
@@ -290,7 +290,7 @@ export class LazyLoadingService {
       }
 
       // Store asset data
-      (resource as any).data = await response.blob();
+      (resource as LoadableResource & { data: Blob }).data = await response.blob();
       
       clearTimeout(timeout);
       resolve();
@@ -314,7 +314,7 @@ export class LazyLoadingService {
       const font = new FontFace('LazyFont', `url(${resource.url})`);
       
       font.load().then(() => {
-        (document as any).fonts.add(font);
+        (document as Document & { fonts: { add: (f: FontFace) => void } }).fonts.add(font);
         clearTimeout(timeout);
         resolve();
       }).catch((error) => {
@@ -386,7 +386,7 @@ export class LazyLoadingService {
   private setupIdlePreloading(): void {
     if ('requestIdleCallback' in window) {
       const preloadDuringIdle = () => {
-        (window as any).requestIdleCallback((deadline: any) => {
+        (window as Window & { requestIdleCallback: (cb: (deadline: IdleDeadline) => void) => number }).requestIdleCallback((deadline: IdleDeadline) => {
           while (deadline.timeRemaining() > 0) {
             const unloadedResource = this.getNextUnloadedResource('high');
             if (unloadedResource) {
